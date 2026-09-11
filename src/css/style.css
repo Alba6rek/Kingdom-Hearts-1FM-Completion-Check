@@ -1,0 +1,1603 @@
+/*
+===============================================================================
+KINGDOM HEARTS FINAL MIX COMPLETION ANALYZER
+===============================================================================
+
+The layout intentionally follows the visual structure of the user's
+Silksong analyzer:
+
+- narrow ~600px centered content
+- Cinzel headings
+- Heebo body font
+- full-screen fixed background
+- compact analyzer controls
+- colored completion entries
+- simple square buttons
+- custom checkboxes
+- generated content below the file selector
+
+The palette is shifted from Silksong green to Kingdom Hearts blue/silver.
+===============================================================================
+*/
+
+:root {
+  --rt-main: #315f9f;
+  --rt-main-light: #4c80c7;
+  --rt-main-dark: #203f6b;
+
+  --kh-text: #ffffff;
+  --kh-soft: #c8d9ef;
+  --kh-muted: rgba(219, 232, 250, 0.72);
+
+  --kh-complete: #54d884;
+  --kh-partial: #68a9ff;
+  --kh-missing: #ef6d71;
+
+  cursor: default;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 17px;
+  font-weight: 300;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Heebo", sans-serif;
+  color: var(--kh-text);
+  background-color: #070b12;
+  margin: 0;
+  overflow: auto;
+}
+
+/* ------------------------- scrollbar ------------------------- */
+
+::-webkit-scrollbar {
+  width: 1rem;
+  height: 1rem;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--rt-main);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--rt-main-light);
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-track-piece {
+  background: #080d16;
+}
+
+/* ------------------------- fixed background ------------------------- */
+
+#background {
+  position: fixed;
+  inset: 0;
+  padding: 0;
+  margin: 0;
+
+  /*
+   * No copyrighted/game image is required here.
+   * The layered gradients keep the same "background behind narrow content"
+   * feeling as your Silksong page.
+   */
+  background:
+    radial-gradient(
+      circle at 50% 5%,
+      rgba(58, 102, 164, 0.34) 0,
+      rgba(12, 23, 40, 0.15) 36%,
+      rgba(5, 9, 16, 0.92) 75%
+    ),
+    linear-gradient(
+      180deg,
+      #111c2d 0,
+      #080d16 38%,
+      #05080d 100%
+    );
+
+  z-index: 1;
+}
+
+#background::before,
+#background::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+#background::before {
+  width: 520px;
+  height: 520px;
+  border: 1px solid rgba(147, 184, 232, 0.06);
+  border-radius: 50%;
+  left: 50%;
+  top: -310px;
+  transform: translateX(-50%);
+  box-shadow:
+    0 0 80px rgba(74, 125, 195, 0.07),
+    inset 0 0 80px rgba(74, 125, 195, 0.05);
+}
+
+#background::after {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 310px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(186, 213, 245, 0.035),
+      transparent
+    );
+}
+
+/* ------------------------- main content ------------------------- */
+
+#content {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 0.6rem 2rem;
+  position: relative;
+  z-index: 1000;
+}
+
+b {
+  font-weight: 500;
+  color: #bfd7f5;
+}
+
+strong {
+  font-weight: 700;
+  font-size: 1.03em;
+  letter-spacing: 0.012em;
+}
+
+p {
+  margin-top: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+a,
+a:active,
+a:visited {
+  display: inline-block;
+  color: #b9d4f5;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+a:hover {
+  color: #ffffff;
+  text-shadow: 0 0 0.6em #68a9ff;
+}
+
+/* ------------------------- headings ------------------------- */
+
+h1 {
+  font-size: 2.3rem;
+  color: #ffffff;
+  margin: 2rem 0 0;
+}
+
+#h1-title {
+  font-family: "Cinzel", "Times New Roman", serif;
+  font-weight: 500;
+  text-align: center;
+  line-height: 2.45rem;
+  letter-spacing: 0.025em;
+  text-shadow:
+    0 0 22px rgba(96, 154, 226, 0.35),
+    0 2px 2px rgba(0, 0, 0, 0.7);
+}
+
+#sub-title {
+  font-family: "Cinzel", "Times New Roman", serif;
+  font-weight: 400;
+  text-align: center;
+  font-size: 1.1rem;
+  margin: 0.15rem 0 1rem;
+  line-height: 1.5rem;
+  color: #dce9f8;
+}
+
+h2 {
+  font-family: "Cinzel", "Times New Roman", serif;
+  font-weight: 500;
+  font-size: 1.55rem;
+  text-align: center;
+  margin: 1.8rem 0 0.6rem;
+  color: #ffffff;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+h3 {
+  font-family: "Cinzel", "Times New Roman", serif;
+  font-size: 1.08rem;
+  font-weight: 500;
+  margin: 1rem 0 0.45rem;
+  color: #dceaff;
+}
+
+.smalltext {
+  font-size: 0.8rem;
+  text-align: center;
+  color: rgba(228, 238, 250, 0.84);
+}
+
+.section-description {
+  text-align: center;
+  font-size: 0.8rem;
+  margin: 0 1.3rem 1.3rem;
+  color: rgba(156, 196, 245, 0.85);
+}
+
+/* ------------------------- path / tooltip ------------------------- */
+
+#save-location-input {
+  display: block;
+  font-family: "Consolas", monospace;
+  font-size: 0.68rem;
+  text-align: center;
+  width: 100%;
+  max-width: 37em;
+  color: #ffffff;
+  background-color: rgba(93, 115, 145, 0.32);
+  margin: 0.4rem auto 0.6rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid rgba(198, 220, 247, 0.55);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+#save-location-input:focus {
+  outline: 0;
+  border-color: #a9cdf8;
+}
+
+.tooltip {
+  position: relative;
+  display: block;
+  margin: 0 auto;
+  width: min(100%, 37em);
+}
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  width: max-content;
+  max-width: 95vw;
+
+  background-color: var(--rt-main);
+  color: #edf6ff;
+
+  font-size: 0.78rem;
+  text-align: center;
+
+  border-radius: 3px;
+  padding: 0.16rem 0.7rem;
+
+  position: absolute;
+  z-index: 5;
+  bottom: 132%;
+  left: 50%;
+  transform: translateX(-50%);
+
+  opacity: 0;
+  transition: all 0.25s ease;
+}
+
+.tooltip:hover .tooltip-text,
+.tooltip.tooltip-visible .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ------------------------- input / buttons ------------------------- */
+
+.input-file,
+.input-button {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.centered {
+  flex-direction: row;
+  align-items: center;
+}
+
+.input-buttons {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: inherit;
+  justify-content: center;
+}
+
+.button {
+  display: inline-flex;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+
+  width: max-content;
+  min-height: 2rem;
+
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: "Heebo", sans-serif;
+  text-align: center;
+
+  background-color: var(--rt-main);
+  color: #cfe3fb;
+
+  border: 2px solid var(--rt-main-dark);
+  border-radius: 2px;
+
+  padding: 0.3rem 1rem;
+  margin: 0.25rem;
+
+  transition: all 0.25s ease;
+}
+
+.button:hover {
+  color: #ffffff;
+  background-color: var(--rt-main-light);
+  border-color: var(--rt-main-light);
+  cursor: pointer;
+}
+
+.button:focus,
+.input-file:focus + label {
+  outline: 0;
+  border-color: #80b8ff;
+  box-shadow: 0 0 0.35rem rgba(92, 161, 247, 0.48);
+}
+
+.button-large {
+  border-width: 7px;
+  border-radius: 4px;
+}
+
+#file-input-label {
+  max-width: 325px;
+}
+
+.save-status {
+  min-height: 1.5rem;
+  margin: 0.4rem 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--kh-muted);
+}
+
+.save-status.good {
+  color: var(--kh-complete);
+}
+
+.save-status.bad {
+  color: #ff9497;
+}
+
+/* ------------------------- line / selection ------------------------- */
+
+.horizontal-line {
+  margin: 1rem 0;
+  height: 1px;
+  width: 100%;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(159, 195, 239, 0.62),
+      transparent
+    );
+  box-shadow: 0 0 7px rgba(84, 148, 226, 0.28);
+}
+
+.slot-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 0.35rem 0 0.4rem;
+}
+
+.select-input {
+  font-family: "Heebo", sans-serif;
+  font-size: 0.9rem;
+  color: white;
+  background-color: rgba(35, 66, 106, 0.8);
+  border: 1px solid #477bb8;
+  border-radius: 3px;
+  padding: 0.25rem 0.45rem;
+  max-width: 70%;
+}
+
+/* ------------------------- checkboxes ------------------------- */
+
+.checkboxes {
+  margin-top: 0;
+}
+
+.centered-checkboxes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.checkbox-label {
+  display: inline-block;
+  position: relative;
+  margin: 0.4rem 0.2rem 0;
+  padding: 0.25rem 0.5rem 0.25rem 2rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  user-select: none;
+  width: max-content;
+  transition: all 0.25s ease;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0.27em;
+  left: 0.27em;
+  height: 1.3em;
+  width: 1.3em;
+  background-color: #bdd2ec;
+  border: 1px solid var(--rt-main);
+  transition: all 0.25s ease;
+}
+
+input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-label:hover .checkmark {
+  background-color: #ffffff;
+}
+
+input:checked + label .checkmark {
+  background-color: var(--rt-main);
+}
+
+.checkmark::after {
+  content: "";
+  position: absolute;
+  display: none;
+
+  left: 6px;
+  top: 2px;
+
+  width: 5px;
+  height: 10px;
+
+  border: solid #ddecff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+input:checked + label .checkmark::after {
+  display: block;
+}
+
+/* ------------------------- analyzer sections ------------------------- */
+
+.analyzer-section {
+  margin: 0 0 1.5rem;
+}
+
+.section-block {
+  border: 1px solid rgba(123, 163, 211, 0.17);
+  background: rgba(7, 14, 24, 0.44);
+  padding: 0.6rem 0.65rem;
+  margin: 0.4rem 0;
+  border-radius: 2px;
+  box-shadow: inset 0 0 20px rgba(43, 82, 130, 0.06);
+}
+
+.single-entry {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-height: 1.85rem;
+  padding: 0.24rem 0.25rem;
+  border-bottom: 1px solid rgba(163, 193, 229, 0.08);
+}
+
+.single-entry:last-child {
+  border-bottom: 0;
+}
+
+.entry-status {
+  flex: 0 0 1.15rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.entry-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.entry-name {
+  font-weight: 500;
+}
+
+.entry-description {
+  display: block;
+  color: rgba(216, 229, 245, 0.65);
+  font-size: 0.76rem;
+  line-height: 1.25rem;
+}
+
+.entry-value {
+  margin-left: auto;
+  color: #d8e9ff;
+  font-family: "Consolas", monospace;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.complete .entry-status,
+.complete .entry-name,
+.complete .entry-value {
+  color: var(--kh-complete);
+}
+
+.partial .entry-status,
+.partial .entry-name,
+.partial .entry-value {
+  color: var(--kh-partial);
+}
+
+.missing .entry-status,
+.missing .entry-name,
+.missing .entry-value {
+  color: var(--kh-missing);
+}
+
+.info .entry-status {
+  color: #93c5ff;
+}
+
+/* completion percent heading */
+
+.completion-percent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 3.7rem;
+  padding: 0.1rem 0.4rem;
+  margin-left: 0.2rem;
+
+  border-radius: 999px;
+  background: rgba(56, 98, 151, 0.35);
+  border: 1px solid rgba(129, 174, 229, 0.34);
+
+  font-family: "Heebo", sans-serif;
+  font-size: 0.77rem;
+}
+
+.progress-track {
+  height: 0.28rem;
+  overflow: hidden;
+  margin: 0.3rem 0.3rem 0.6rem;
+  background: rgba(194, 216, 243, 0.11);
+  border-radius: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0;
+  background:
+    linear-gradient(
+      90deg,
+      #315f9f,
+      #6bb2ff
+    );
+  transition: width 0.5s ease;
+}
+
+.progress-fill.complete {
+  background:
+    linear-gradient(
+      90deg,
+      #247f4a,
+      #5ade8d
+    );
+}
+
+/* ------------------------- spoiler blur ------------------------- */
+
+.spoiler-text.blurred {
+  color: transparent;
+  background-color: rgba(202, 223, 247, 0.12);
+  border-radius: 2px;
+  text-shadow: none;
+  user-select: none;
+}
+
+.spoiler-text.blurred:hover {
+  /*
+   * Reveal the hidden item while hovering it.
+   * When the mouse leaves, it becomes hidden again.
+   */
+  color: inherit;
+  background-color: transparent;
+  text-shadow: inherit;
+  user-select: text;
+}
+
+/* ------------------------- tabs ------------------------- */
+
+.tab-switch-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.tab-switch {
+  background-color: transparent;
+  color: #70adf4;
+  border: 2px solid transparent;
+  border-radius: 1rem 0 1rem 0;
+  font-size: 0.88rem;
+}
+
+.tab-switch:hover {
+  background-color: #3d76bd;
+  color: white;
+  border-color: transparent;
+}
+
+.tab-active {
+  background-color: rgb(235, 241, 248);
+  color: rgb(13, 36, 63);
+  border-color: transparent;
+  box-shadow: 0 0 1rem #477fca;
+  text-shadow: 0 0 0.5rem #9bc7ff;
+}
+
+/* ------------------------- research ------------------------- */
+
+.research-panel {
+  margin-top: 1rem;
+}
+
+.research-region {
+  margin: 0.7rem 0;
+  padding: 0.55rem;
+  border-left: 3px solid #477fca;
+  background: rgba(13, 27, 45, 0.62);
+}
+
+.research-region-name {
+  font-weight: 700;
+  color: #cce2ff;
+}
+
+.research-meta {
+  font-size: 0.72rem;
+  color: #91a9c6;
+  margin-bottom: 0.25rem;
+}
+
+.counter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+}
+
+.counter-cell {
+  border: 1px solid rgba(119, 161, 213, 0.2);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 0.25rem;
+  text-align: center;
+  font-family: "Consolas", monospace;
+  font-size: 0.7rem;
+}
+
+.counter-cell span {
+  display: block;
+  color: #7894b8;
+  font-size: 0.62rem;
+}
+
+.raw-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+
+#save-area {
+  display: block;
+  width: 100%;
+  max-height: 28rem;
+  overflow: auto;
+
+  font-family: "Consolas", monospace;
+  font-size: 0.7rem;
+  line-height: 1.15rem;
+
+  color: #deebfb;
+  background-color: rgba(0, 0, 0, 0.42);
+
+  border: 1px solid rgba(190, 214, 242, 0.35);
+  padding: 0.55rem;
+  margin: 0.5rem 0;
+  white-space: pre;
+}
+
+/* ------------------------- footer ------------------------- */
+
+.footer {
+  border-top: 1px solid rgba(137, 178, 226, 0.15);
+  padding-top: 0.65rem;
+}
+
+/* ------------------------- scroll button ------------------------- */
+
+.scroll-up-button {
+  width: 50px;
+  height: 50px;
+
+  background-color: var(--rt-main);
+  border: 0;
+  border-radius: 2px;
+  outline: 0;
+
+  position: fixed;
+  right: 1px;
+  bottom: 0;
+  z-index: 1100;
+
+  opacity: 0.82;
+  transition: all 0.25s ease;
+}
+
+.scroll-up-button:hover {
+  background-color: var(--rt-main-light);
+  cursor: pointer;
+  opacity: 1;
+}
+
+.scroll-up-button-arrow {
+  position: relative;
+  left: 12px;
+  top: 3px;
+
+  width: 12px;
+  height: 12px;
+
+  border: solid #d8eaff;
+  border-width: 2px 0 0 2px;
+
+  transform: rotate(45deg);
+}
+
+/* ------------------------- utility ------------------------- */
+
+.hidden {
+  display: none !important;
+}
+
+/* ------------------------- responsive ------------------------- */
+
+@media screen and (max-width: 570px) {
+  .centered {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #content {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  h1 {
+    font-size: 1.9rem;
+  }
+
+  #sub-title {
+    font-size: 1rem;
+  }
+
+  #save-location-input {
+    font-size: 0.57rem;
+  }
+
+  .counter-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .slot-row {
+    flex-direction: column;
+  }
+
+  .select-input {
+    max-width: 100%;
+  }
+
+  .counter-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .single-entry {
+    gap: 0.35rem;
+  }
+
+  .entry-value {
+    font-size: 0.72rem;
+  }
+}
+
+
+/* ------------------------- Heartless Journal ------------------------- */
+
+.enemy-journal-group {
+  margin-bottom: 0.75rem;
+}
+
+.enemy-journal-group .single-entry {
+  min-height: 1.7rem;
+}
+
+.enemy-journal-group .entry-description {
+  opacity: 0.7;
+}
+
+
+/* ==========================================================================
+   MAIN ANALYZER TABS
+   ========================================================================== */
+
+.analyzer-tabs {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+  margin: 0.7rem 0 1.2rem;
+}
+
+.analyzer-tab-button {
+  appearance: none;
+  border: 1px solid rgba(130, 174, 226, 0.28);
+  background: rgba(15, 29, 48, 0.7);
+  color: #a9c9ef;
+  font-family: "Heebo", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.38rem 0.72rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.analyzer-tab-button:hover {
+  color: #ffffff;
+  border-color: rgba(126, 181, 247, 0.65);
+  background: rgba(48, 93, 150, 0.65);
+}
+
+.analyzer-tab-button.active {
+  color: #ffffff;
+  background: var(--rt-main);
+  border-color: var(--rt-main-light);
+  box-shadow: 0 0 0.7rem rgba(79, 141, 218, 0.28);
+}
+
+.analyzer-tab-panel {
+  min-height: 8rem;
+}
+
+.game-status-section {
+  margin-bottom: 0.8rem;
+}
+
+/* ==========================================================================
+   COLLAPSIBLE LISTS
+   ========================================================================== */
+
+.collapsible-section {
+  display: block;
+  margin: 0 0 0.8rem;
+  border: 1px solid rgba(121, 163, 214, 0.2);
+  background: rgba(5, 12, 21, 0.28);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.collapsible-summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.6rem;
+  padding: 0.55rem 0.7rem;
+  cursor: pointer;
+  user-select: none;
+  background: rgba(29, 55, 88, 0.48);
+  transition: background-color 0.2s ease;
+}
+
+.collapsible-summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible-summary::before {
+  content: "›";
+  display: inline-block;
+  color: #89b9f2;
+  font-size: 1.25rem;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition: transform 0.2s ease;
+}
+
+.collapsible-section[open] > .collapsible-summary::before {
+  transform: rotate(90deg);
+}
+
+.collapsible-summary:hover {
+  background: rgba(48, 88, 137, 0.58);
+}
+
+.collapsible-title {
+  font-family: "Cinzel", "Times New Roman", serif;
+  color: #eef6ff;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.collapsible-summary-right {
+  margin-left: auto;
+  color: #9cc6f7;
+  font-size: 0.75rem;
+  font-family: "Heebo", sans-serif;
+  white-space: nowrap;
+}
+
+.collapsible-content {
+  padding: 0.55rem;
+}
+
+.collapsible-content > .section-description {
+  margin-top: 0.15rem;
+}
+
+.collapsible-content .section-block {
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+/* Nested groups, e.g. bosses by world / characters by world */
+
+.nested-list {
+  margin: 0.4rem 0;
+  border: 1px solid rgba(124, 163, 209, 0.13);
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(5, 10, 17, 0.25);
+}
+
+.nested-list > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.38rem 0.55rem;
+  cursor: pointer;
+  color: #c8def8;
+  font-weight: 500;
+  font-size: 0.84rem;
+  background: rgba(32, 59, 92, 0.32);
+}
+
+.nested-list > summary::-webkit-details-marker {
+  display: none;
+}
+
+.nested-list > summary::before {
+  content: "+";
+  width: 1rem;
+  text-align: center;
+  color: #78adeb;
+}
+
+.nested-list[open] > summary::before {
+  content: "−";
+}
+
+.nested-list > summary span {
+  margin-left: auto;
+  color: #7898bc;
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+
+.nested-list .section-block {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid rgba(124, 163, 209, 0.1);
+  border-radius: 0;
+}
+
+.nested-description {
+  margin: 0.45rem 0.6rem 0.1rem;
+  color: rgba(176, 205, 238, 0.68);
+  font-size: 0.72rem;
+}
+
+/* ==========================================================================
+   EXTERNAL LINKS / HINTS / UNKNOWN STATE
+   ========================================================================== */
+
+.entry-link {
+  display: inline;
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: none;
+}
+
+.entry-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 0.15rem;
+}
+
+.external-link-mark {
+  display: inline-block;
+  margin-left: 0.15rem;
+  color: rgba(142, 186, 237, 0.65);
+  font-size: 0.67em;
+  vertical-align: super;
+}
+
+.entry-hint {
+  /*
+   * Only rendered when the content entry has a non-empty `hint`.
+   *
+   * The whole line is hidden by default. The element itself remains visible
+   * as a small placeholder bar so the user has an area to hover.
+   */
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 5.5rem;
+
+  margin-top: 0.12rem;
+  padding: 0.04rem 0.3rem;
+
+  font-size: 0.72rem;
+  line-height: 1.15rem;
+
+  border-radius: 2px;
+  background-color: rgba(236, 214, 148, 0.14);
+
+  cursor: help;
+  user-select: none;
+
+  transition:
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+/*
+ * Hide BOTH the "Hint:" label and the actual hint text.
+ *
+ * `.entry-hint .hint-label` is deliberately more specific than the global
+ * `strong { color: ... }` rule, which was one reason the previous version
+ * could still look visible.
+ */
+.entry-hint .hint-label,
+.entry-hint .hint-text {
+  color: transparent;
+  text-shadow: none;
+
+  transition:
+    color 0.18s ease;
+}
+
+/*
+ * Reveal the complete hint on mouse hover or keyboard focus.
+ */
+.entry-hint:hover,
+.entry-hint:focus,
+.entry-hint:focus-within {
+  background-color: transparent;
+  box-shadow:
+    0 0 0 1px rgba(236, 214, 148, 0.18);
+  outline: none;
+  user-select: text;
+}
+
+.entry-hint:hover .hint-label,
+.entry-hint:hover .hint-text,
+.entry-hint:focus .hint-label,
+.entry-hint:focus .hint-text,
+.entry-hint:focus-within .hint-label,
+.entry-hint:focus-within .hint-text {
+  color: rgba(236, 214, 148, 0.96);
+}
+
+.unknown .entry-status,
+.unknown .entry-name,
+.unknown .entry-value {
+  color: #d4b66a;
+}
+
+.unknown .entry-description {
+  color: rgba(218, 197, 142, 0.62);
+}
+
+/* On collapsed sections the old section h2 is not used. */
+.collapsible-section h2 {
+  display: none;
+}
+
+@media screen and (max-width: 570px) {
+  .analyzer-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .analyzer-tab-button {
+    width: 100%;
+    padding-left: 0.35rem;
+    padding-right: 0.35rem;
+  }
+
+  .collapsible-summary {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .collapsible-title {
+    font-size: 0.92rem;
+  }
+
+  .collapsible-summary-right {
+    font-size: 0.68rem;
+  }
+}
+
+@media screen and (max-width: 390px) {
+  .analyzer-tabs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .single-entry {
+    flex-wrap: wrap;
+  }
+
+  .entry-value {
+    width: 100%;
+    margin-left: 1.65rem;
+    white-space: normal;
+  }
+}
+
+
+
+/* ==========================================================================
+   DESTINY ISLAND WALL THEME
+   ==========================================================================
+
+   This theme uses the user-provided chalk wall image as the page background
+   and shifts the page styling toward a misty Kingdom Hearts / Destiny Islands
+   palette:
+   - stone blue
+   - moonlit silver
+   - chalk white
+   - soft glow accents
+
+   Background asset:
+   src/assets/destiny-island-wall.jpg
+   ========================================================================== */
+
+:root {
+  --rt-main: #5872a8;
+  --rt-main-light: #9fb7ea;
+  --rt-main-dark: #33496f;
+
+  --kh-text: #f5f8ff;
+  --kh-soft: #d7e0f7;
+  --kh-muted: rgba(223, 231, 245, 0.78);
+
+  --kh-complete: #a7d7ff;
+  --kh-partial: #d7e5ff;
+  --kh-missing: #ef9fa8;
+}
+
+body {
+  background-color: #050912;
+  color: var(--kh-text);
+}
+
+/* Page background image */
+#background {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5, 9, 18, 0.55) 0%,
+      rgba(6, 12, 25, 0.42) 28%,
+      rgba(5, 9, 17, 0.68) 100%
+    ),
+    radial-gradient(
+      circle at 50% 8%,
+      rgba(206, 223, 255, 0.18) 0%,
+      rgba(123, 150, 201, 0.12) 18%,
+      rgba(27, 38, 63, 0.08) 42%,
+      rgba(4, 8, 15, 0.0) 65%
+    ),
+    url("../assets/destiny-island-wall.jpg");
+
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+
+#background::before {
+  width: auto;
+  height: auto;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  left: 0;
+  top: 0;
+  transform: none;
+  box-shadow: none;
+
+  background:
+    radial-gradient(
+      circle at 22% 36%,
+      rgba(255, 255, 255, 0.12),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 77% 39%,
+      rgba(255, 255, 255, 0.10),
+      transparent 22%
+    ),
+    linear-gradient(
+      120deg,
+      transparent 55%,
+      rgba(232, 241, 255, 0.15) 70%,
+      rgba(255, 255, 255, 0.04) 77%,
+      transparent 84%
+    );
+}
+
+#background::after {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100%;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 13, 24, 0.22),
+      rgba(6, 11, 19, 0.12) 28%,
+      rgba(4, 8, 15, 0.58) 100%
+    );
+}
+
+/* Main content card */
+#content {
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+  padding: 0 0.85rem 2rem;
+}
+
+#content::before {
+  /*content: "";*/
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(10, 16, 29, 0.74),
+      rgba(8, 14, 25, 0.78)
+    );
+
+  border: 1px solid rgba(213, 225, 249, 0.12);
+  border-radius: 10px;
+
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(242, 247, 255, 0.03);
+
+  backdrop-filter: blur(6px);
+}
+
+/* Typography */
+#h1-title {
+  color: #f7fbff;
+  text-shadow:
+    0 0 22px rgba(192, 215, 255, 0.20),
+    0 0 40px rgba(113, 143, 206, 0.14),
+    0 2px 2px rgba(0, 0, 0, 0.7);
+}
+
+#sub-title,
+.section-description,
+.smalltext {
+  color: rgba(228, 236, 251, 0.86);
+}
+
+a,
+a:active,
+a:visited {
+  color: #dce9ff;
+}
+
+a:hover {
+  color: #ffffff;
+  text-shadow: 0 0 0.75em rgba(211, 228, 255, 0.72);
+}
+
+/* Buttons and inputs */
+.button {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(104, 130, 181, 0.92),
+      rgba(68, 93, 143, 0.94)
+    );
+
+  color: #eef4ff;
+  border-color: rgba(193, 214, 248, 0.22);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 6px 14px rgba(0, 0, 0, 0.18);
+}
+
+.button:hover {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(146, 173, 219, 0.96),
+      rgba(96, 123, 174, 0.96)
+    );
+  color: #ffffff;
+  border-color: rgba(225, 237, 255, 0.34);
+}
+
+.select-input,
+#save-location-input {
+  background-color: rgba(34, 49, 75, 0.82);
+  border-color: rgba(190, 212, 247, 0.42);
+  color: #f4f8ff;
+}
+
+/* Lists / sections */
+.section-block,
+.collapsible-section,
+.nested-list,
+.research-region,
+#save-area {
+  backdrop-filter: blur(4px);
+}
+
+.section-block {
+  border-color: rgba(203, 220, 247, 0.13);
+  background: rgba(10, 17, 28, 0.46);
+  box-shadow:
+    inset 0 0 24px rgba(94, 126, 184, 0.06),
+    0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.single-entry {
+  border-bottom-color: rgba(218, 229, 247, 0.08);
+}
+
+.entry-description {
+  color: rgba(219, 228, 244, 0.70);
+}
+
+.completion-percent {
+  background: rgba(143, 165, 214, 0.14);
+  border-color: rgba(215, 228, 251, 0.22);
+}
+
+.progress-track {
+  background: rgba(202, 216, 242, 0.10);
+}
+
+.progress-fill {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(139, 162, 214, 0.96),
+      rgba(231, 240, 255, 0.96)
+    );
+}
+
+.progress-fill.complete {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(144, 187, 227, 0.96),
+      rgba(247, 251, 255, 0.96)
+    );
+}
+
+/* Tabs */
+.analyzer-tab-button,
+.tab-switch {
+  background: rgba(22, 33, 52, 0.72);
+  color: #cddcf8;
+  border-color: rgba(205, 220, 248, 0.16);
+}
+
+.analyzer-tab-button:hover,
+.tab-switch:hover {
+  background: rgba(92, 118, 167, 0.72);
+  color: #ffffff;
+  border-color: rgba(220, 232, 252, 0.30);
+}
+
+.analyzer-tab-button.active,
+.tab-active {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(214, 227, 248, 0.96),
+      rgba(177, 198, 235, 0.96)
+    );
+  color: #15243c;
+  border-color: rgba(232, 240, 255, 0.35);
+  box-shadow:
+    0 0 18px rgba(188, 210, 247, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
+  text-shadow: none;
+}
+
+/* Collapsible headers */
+.collapsible-section {
+  border-color: rgba(205, 220, 245, 0.14);
+  background: rgba(9, 14, 24, 0.38);
+  border-radius: 8px;
+}
+
+.collapsible-summary {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(49, 69, 106, 0.58),
+      rgba(33, 48, 77, 0.62)
+    );
+}
+
+.collapsible-summary:hover {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(86, 111, 160, 0.62),
+      rgba(51, 72, 110, 0.68)
+    );
+}
+
+.collapsible-title {
+  color: #f2f7ff;
+}
+
+.collapsible-summary-right {
+  color: rgba(219, 230, 250, 0.80);
+}
+
+.nested-list {
+  border-color: rgba(206, 220, 246, 0.10);
+  border-radius: 6px;
+  background: rgba(9, 14, 23, 0.28);
+}
+
+.nested-list > summary {
+  background: rgba(39, 55, 85, 0.45);
+  color: #dbe8fd;
+}
+
+.nested-list > summary span,
+.research-meta,
+.nested-description {
+  color: rgba(207, 220, 244, 0.70);
+}
+
+/* Checkbox / utility */
+.checkmark {
+  background-color: rgba(222, 233, 251, 0.92);
+  border-color: rgba(94, 125, 181, 0.80);
+}
+
+input:checked + label .checkmark {
+  background-color: #6f8bc6;
+}
+
+.horizontal-line,
+.footer {
+  border-color: rgba(212, 225, 248, 0.12);
+}
+
+.scroll-up-button {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(99, 126, 177, 0.96),
+      rgba(66, 92, 141, 0.96)
+    );
+}
+
+.scroll-up-button:hover {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(155, 181, 224, 0.98),
+      rgba(93, 120, 169, 0.98)
+    );
+}
+
+@media screen and (max-width: 570px) {
+  #content {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  #content::before {
+    border-radius: 0;
+  }
+}
+
+
+/* Journal character world-level completion bar. */
+.nested-progress-track {
+  margin: 0.45rem 0.6rem 0.25rem;
+}
