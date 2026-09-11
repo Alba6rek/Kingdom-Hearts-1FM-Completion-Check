@@ -23,6 +23,7 @@ This Read me still not finalized
 - 99 Pupies
 - Gummi Ship Blueprints
 - Extra information About the other Characters
+- Some Documentations.
 
 ## in-progress:
 
