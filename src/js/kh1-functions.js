@@ -15,6 +15,26 @@ This file performs the work.
 
 import KH1_DICTIONARY from "./kh1-dictionary.js";
 
+const TEXT_DECODERS =
+  new Map();
+
+function GetTextDecoder(encoding) {
+  const key =
+    String(encoding)
+      .toLowerCase();
+
+  if (!TEXT_DECODERS.has(key)) {
+    TEXT_DECODERS.set(
+      key,
+      new TextDecoder(encoding)
+    );
+  }
+
+  return TEXT_DECODERS.get(
+    key
+  );
+}
+
 function CreateDataView(bytes) {
   return new DataView(
     bytes.buffer,
@@ -51,14 +71,25 @@ function ReadCString(
       data.length;
   }
 
+  const stringBytes =
+    data.slice(
+      0,
+      end
+    );
+
   try {
-    return new TextDecoder(encoding)
-      .decode(data.slice(0, end))
+    return GetTextDecoder(
+      encoding
+    )
+      .decode(stringBytes)
       .replace(/\u0090/g, "")
       .normalize("NFKC");
   } catch {
-    return new TextDecoder("utf-8")
-      .decode(data.slice(0, end));
+    return GetTextDecoder(
+      "utf-8"
+    ).decode(
+      stringBytes
+    );
   }
 }
 
@@ -96,6 +127,56 @@ function CountBitsInBytes(bytes) {
         total + CountBits(byte),
       0
     );
+}
+
+/*
+ * Decode a table of independent bit flags.
+ *
+ * Each mapping entry may point anywhere inside the save block. This is
+ * important for features such as Trinity marks: most confirmed locations use
+ * the normal persistent Trinity table, but action-dependent locations may be
+ * stored in separate environment/event flags elsewhere in the save.
+ *
+ * Unknown mappings deliberately return `found: null`; we never guess from a
+ * counter or from a neighboring bit.
+ */
+function DecodeMappedBitStates(
+  save,
+  mappings
+) {
+  return Object.fromEntries(
+    Object.entries(mappings)
+      .map(
+        ([key, mapping]) => {
+          const hasExactFlag =
+            Number.isInteger(
+              mapping.offset
+            ) &&
+            Number.isInteger(
+              mapping.mask
+            );
+
+          const inRange =
+            hasExactFlag &&
+            mapping.offset >= 0 &&
+            mapping.offset < save.length;
+
+          return [
+            key,
+            {
+              ...mapping,
+              found:
+                inRange
+                  ? Boolean(
+                      save[mapping.offset] &
+                      mapping.mask
+                    )
+                  : null
+            }
+          ];
+        }
+      )
+  );
 }
 
 function ItemName(itemId) {
@@ -256,7 +337,7 @@ function DecodeSummons(save, KH1_SAVE) {
   };
 }
 
-function DecodeTrinity(save, KH1_SAVE) {
+function DecodeTrinity(save, KH1_SAVE, KH1_TRINITY_MARK_STATES = {}) {
   const unlockByte =
     save[
       KH1_SAVE.TRINITY_UNLOCKS
@@ -296,18 +377,60 @@ function DecodeTrinity(save, KH1_SAVE) {
       rawCounters[5]
   };
 
+  const rawMarkFlags =
+    Array.from(
+      save.slice(
+        KH1_SAVE.TRINITY_MARK_FLAGS,
+        KH1_SAVE.TRINITY_MARK_FLAGS +
+        KH1_SAVE.TRINITY_MARK_FLAGS_LENGTH
+      )
+    );
+
+  const persistentMarkedTotal =
+    CountBitsInBytes(
+      rawMarkFlags
+    );
+
+  const foundTotal =
+    Object.values(counts)
+      .reduce(
+        (total, value) =>
+          total + value,
+        0
+      );
+
+  /*
+   * Decode each physical Trinity independently.
+   *
+   * Do not limit mappings to 0x1C6C..0x1C7F. The eight action-dependent
+   * Trinities may eventually resolve to environment/event flags elsewhere in
+   * the save, so each mapping reads its absolute save offset directly.
+   */
+  const markStates =
+    DecodeMappedBitStates(
+      save,
+      KH1_TRINITY_MARK_STATES
+    );
+
   return {
     unlockByte,
     unlocked,
     rawCounters,
     counts,
-    foundTotal:
-      Object.values(counts)
-        .reduce(
-          (total, value) =>
-            total + value,
-          0
-        )
+    foundTotal,
+    rawMarkFlags,
+    markStates,
+    markFlagsOffset:
+      KH1_SAVE.TRINITY_MARK_FLAGS,
+    markFlagsLength:
+      KH1_SAVE.TRINITY_MARK_FLAGS_LENGTH,
+    persistentMarkedTotal,
+    exceptionalCount:
+      Math.max(
+        0,
+        foundTotal -
+        persistentMarkedTotal
+      )
   };
 }
 
@@ -1108,6 +1231,7 @@ export {
   SafeUnixDate,
   CountBits,
   CountBitsInBytes,
+  DecodeMappedBitStates,
   ItemName,
   AbilityName,
   DecodeArchiveDirectory,

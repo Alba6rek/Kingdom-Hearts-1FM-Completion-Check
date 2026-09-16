@@ -38,6 +38,11 @@ When a Journal character has no custom URL override, the shared KHGuides
 Journal URL is used. Other sections may define their own category URL.
 */
 
+const KH1_GUIDE_URLS = Object.freeze({
+  TRINITIES:
+    "https://www.khguides.com/kh/collectibles/trinities/"
+});
+
 const KH1_CONTENT = Object.freeze({
   TABS: [
     {
@@ -65,6 +70,28 @@ const KH1_CONTENT = Object.freeze({
       name: "Extra"
     }
   ],
+
+  /*
+   * World Progress external guide links.
+   *
+   * Keep these in interface metadata rather than the binary database: the
+   * save parser only needs world names/status values, while this file decides
+   * where a displayed world name should link.
+   */
+  WORLD_PROGRESS_URLS: Object.freeze({
+    "Traverse Town": "https://www.khguides.com/kh/traverse-town/",
+    "Wonderland": "https://www.khguides.com/kh/wonderland/",
+    "Olympus Coliseum": "https://www.khguides.com/kh/olympus-coliseum/",
+    "Deep Jungle": "https://www.khguides.com/kh/deep-jungle/",
+    "Agrabah": "https://www.khguides.com/kh/agrabah/",
+    "Atlantica": "https://www.khguides.com/kh/atlantica/",
+    "Halloween Town": "https://www.khguides.com/kh/halloween-town/",
+    "Neverland": "https://www.khguides.com/kh/neverland/",
+    "Hollow Bastion": "https://www.khguides.com/kh/hollow-bastion/",
+    "End of the World": "https://www.khguides.com/kh/end-of-the-world/",
+    "Monstro": "https://www.khguides.com/kh/monstro/",
+    "100 Acre Wood": "https://www.khguides.com/kh/hundred-acre-wood/"
+  }),
 
   /*
    * Sora weapons.
@@ -251,91 +278,84 @@ const KH1_CONTENT = Object.freeze({
   /*
    * TRINITY MARKS
    * -------------
-   * The currently decoded save data gives a FOUND COUNT for each Trinity
-   * color, but we have not yet mapped a unique persistent flag for every
-   * physical Trinity location.
+   * 38 of the 46 physical locations now have confirmed persistent bits from
+   * controlled Slot 99 testing. The remaining eight are action-dependent:
+   * tests 3, 4, 18, 19, 20, 24, 32 and 34.
    *
-   * These numbered marks are therefore COUNT-BASED progress rows.
-   *
-   * Example:
-   *   Blue count = 5
-   *   Blue Trinity #1..#5  -> Found
-   *   Blue Trinity #6..#17 -> Not Found
-   *
-   * This does NOT yet tell us exactly WHICH five world locations were used.
-   * When the individual location flags are reverse engineered, these rows can
-   * be renamed to their real locations and connected to the true flags.
+   * For confirmed rows the interface uses the exact per-location flag.
+   * Pending rows are not assigned guessed bits and remain Unknown. The color
+   * counters are deliberately NOT used to infer any physical Trinity row.
    */
   TRINITY_MARKS: [
     {
       color: "Blue",
       marks: [
-        { number: 1, name: "Blue Trinity #1", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 2, name: "Blue Trinity #2", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 3, name: "Blue Trinity #3", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 4, name: "Blue Trinity #4", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 5, name: "Blue Trinity #5", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 6, name: "Blue Trinity #6", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 7, name: "Blue Trinity #7", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 8, name: "Blue Trinity #8", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 9, name: "Blue Trinity #9", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 10, name: "Blue Trinity #10", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 11, name: "Blue Trinity #11", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 12, name: "Blue Trinity #12", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 13, name: "Blue Trinity #13", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 14, name: "Blue Trinity #14", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 15, name: "Blue Trinity #15", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 16, name: "Blue Trinity #16", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 17, name: "Blue Trinity #17", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" }
+        { testNumber: 1, number: 1, name: "Traverse Town — First District", hint: "Near the world exit, across from the Accessory Shop", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 2, number: 2, name: "Traverse Town — First District", hint: "In front of the café near the Item Shop", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 3, number: 3, name: "Traverse Town — Third District", hint: "Behind the Lady & the Tramp fountain", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 4, number: 4, name: "Traverse Town — Magician's Study", hint: "Near the save station", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 5, number: 5, name: "Wonderland — Lotus Forest", hint: "Yellow-flowers alcove", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 6, number: 6, name: "Wonderland — Lotus Forest", hint: "Yellow-mushrooms alcove", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 7, number: 7, name: "Olympus Coliseum — Gates", hint: "Left gladiator statue", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 8, number: 8, name: "Olympus Coliseum — Gates", hint: "Right gladiator statue", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 9, number: 9, name: "Deep Jungle — Camp", hint: "Near lab equipment / Hippo Lagoon passage", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 10, number: 10, name: "Deep Jungle — Climbing Trees", hint: "Raised platform near Tree House passage", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 11, number: 11, name: "Agrabah — Bazaar", hint: "Ground level, center of area", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 12, number: 12, name: "Agrabah — Cave of Wonders: Silent Chamber", hint: "Center platform near Hall passage", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 13, number: 13, name: "Monstro — Mouth", hint: "Wooden platform near front of mouth", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 14, number: 14, name: "Monstro — Chamber 5", hint: "Ground level across from Chamber 6 passage", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 15, number: 15, name: "Monstro — Throat", hint: "Lowest level, center", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 16, number: 16, name: "Hollow Bastion — Waterway: Dungeon", hint: "Near center, left of Lift Stop platform", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 17, number: 17, name: "Hollow Bastion — Great Crest", hint: "Center after riding floating platform", url: KH1_GUIDE_URLS.TRINITIES }
       ]
     },
     {
       color: "Red",
       marks: [
-        { number: 1, name: "Red Trinity #1", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 2, name: "Red Trinity #2", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 3, name: "Red Trinity #3", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 4, name: "Red Trinity #4", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 5, name: "Red Trinity #5", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 6, name: "Red Trinity #6", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" }
+        { testNumber: 18, number: 1, name: "Traverse Town — First District", hint: "Wooden fence in alley behind Item Shop", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 19, number: 2, name: "Traverse Town — Alleyway", hint: "Metal grate blocking the Waterway", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 20, number: 3, name: "Traverse Town — Second District", hint: "Wooden planks in front of bell tower", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 21, number: 4, name: "Agrabah — Treasure Room", hint: "In front of sphinx statue", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 22, number: 5, name: "Halloween Town — Oogie's Manor", hint: "Ground-level archway near the stream", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 23, number: 6, name: "Hollow Bastion — Entrance Hall", hint: "Second-floor balcony near horned statue", url: KH1_GUIDE_URLS.TRINITIES }
       ]
     },
     {
       color: "Green",
       marks: [
-        { number: 1, name: "Green Trinity #1", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 2, name: "Green Trinity #2", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 3, name: "Green Trinity #3", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 4, name: "Green Trinity #4", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 5, name: "Green Trinity #5", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 6, name: "Green Trinity #6", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 7, name: "Green Trinity #7", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 8, name: "Green Trinity #8", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 9, name: "Green Trinity #9", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" }
+        { testNumber: 24, number: 1, name: "Traverse Town — First District: Accessory Shop", hint: "In front of the center table", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 25, number: 2, name: "Wonderland — Bizarre Room", hint: "At ground level inside the furnace", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 26, number: 3, name: "Wonderland — Rabbit Hole", hint: "Along the wall near the save station", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 27, number: 4, name: "Olympus Coliseum — Gates", hint: "Between two braziers near world-map passage", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 28, number: 5, name: "Deep Jungle — Treetops", hint: "Center of the area", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 29, number: 6, name: "Agrabah — Storage Room", hint: "Near shelving across from save station", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 30, number: 7, name: "Monstro — Mouth", hint: "Top of Geppetto's ship", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 31, number: 8, name: "Neverland — Cabin", hint: "Center of room", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 32, number: 9, name: "Hollow Bastion — Library", hint: "Second floor near bookcase/table/balcony", url: KH1_GUIDE_URLS.TRINITIES }
       ]
     },
     {
       color: "Yellow",
       marks: [
-        { number: 1, name: "Yellow Trinity #1", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 2, name: "Yellow Trinity #2", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 3, name: "Yellow Trinity #3", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 4, name: "Yellow Trinity #4", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" }
+        { testNumber: 33, number: 1, name: "Traverse Town — Mystical House", hint: "Behind Merlin's house near large crates", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 34, number: 2, name: "Olympus Coliseum — Lobby", hint: "In front of the large pedestal", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 35, number: 3, name: "Agrabah — Cave of Wonders: Hall", hint: "Stone statue near boulder path", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 36, number: 4, name: "Neverland — Hold", hint: "Locked door after climbing ladder", url: KH1_GUIDE_URLS.TRINITIES }
       ]
     },
     {
       color: "White",
       marks: [
-        { number: 1, name: "White Trinity #1", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 2, name: "White Trinity #2", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 3, name: "White Trinity #3", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 4, name: "White Trinity #4", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 5, name: "White Trinity #5", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 6, name: "White Trinity #6", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 7, name: "White Trinity #7", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 8, name: "White Trinity #8", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 9, name: "White Trinity #9", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" },
-        { number: 10, name: "White Trinity #10", hint: "", url: "https://www.khguides.com/kh/collectibles/trinities/" }
+        { testNumber: 37, number: 1, name: "Traverse Town — Waterway", hint: "Across from the mural", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 38, number: 2, name: "Wonderland — Lotus Forest", hint: "Alcove through painting in sideways Bizarre Room", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 39, number: 3, name: "Olympus Coliseum — Gates", hint: "Center of the area", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 40, number: 4, name: "Deep Jungle — Cavern of Hearts", hint: "Center of the area", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 41, number: 5, name: "Agrabah — Cave of Wonders: Entrance", hint: "Left of entrance when facing Hall", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 42, number: 6, name: "Monstro — Chamber 6", hint: "Ground level, center", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 43, number: 7, name: "Atlantica — Triton's Palace", hint: "Inside large purple shell structure", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 44, number: 8, name: "Halloween Town — Moonlight Hill", hint: "In front of hill near pumpkin patch", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 45, number: 9, name: "Neverland — Ship", hint: "Near ship's wheel above deck", url: KH1_GUIDE_URLS.TRINITIES },
+        { testNumber: 46, number: 10, name: "Hollow Bastion — Rising Falls", hint: "Shallow pool about halfway up falls", url: KH1_GUIDE_URLS.TRINITIES }
       ]
     }
   ],
@@ -664,135 +684,115 @@ const KH1_CONTENT = Object.freeze({
   ],
 
   /*
-   * Boss list.
+   * Boss display/grouping metadata.
    *
-   * Add/replace completionSource as you identify persistent boss flags.
+   * Binary completion rules live in KH1_BOSS_COMPLETION_STATES inside
+   * kh1-database.js. Names are also available through kh1-dictionary.js.
    *
-   * Known direct mappings currently used:
-   *   Ice Titan  -> completion.iceTitanDefeated
-   *   Sephiroth -> completion.sephirothDefeated
-   *   Red Armor -> completion.redArmorJournal
+   * Entries without a binary rule remain visible as "Mapping needed".
    */
   BOSSES: [
-    { world: "Dive to the Heart", name: "Darkside", completionSource: null, hint: "", url: "https://www.khguides.com/kh/awakening/#darkside" },
+    { key: "darkside", world: "Dive to the Heart", name: "Darkside", hint: "", url: "https://www.khguides.com/kh/awakening/#darkside" },
 
-    { world: "Traverse Town", name: "Guard Armor",    completionSource: null, hint: "", url: "https://www.khguides.com/kh/traverse-town/#guard-armor" },
-    { world: "Traverse Town", name: "Opposite Armor", completionSource: null, hint: "", url: "https://www.khguides.com/kh/traverse-town/#opposite-armor" },
+    { key: "guardArmor", world: "Traverse Town", name: "Guard Armor", hint: "", url: "https://www.khguides.com/kh/traverse-town/#guard-armor" },
+    { key: "oppositeArmor", world: "Traverse Town", name: "Opposite Armor", hint: "", url: "https://www.khguides.com/kh/traverse-town/#opposite-armor" },
+    { key: "redArmor", world: "Traverse Town", name: "Red Armor", hint: "", url: "https://www.khguides.com/kh/combat/bosses/" },
+
+    { key: "trickmaster", world: "Wonderland", name: "Trickmaster", hint: "", url: "https://www.khguides.com/kh/wonderland/#trickmaster" },
+
+    { key: "cloud", world: "Olympus Coliseum", name: "Cloud", hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#cloud" },
+    { key: "cerberus", world: "Olympus Coliseum", name: "Cerberus", hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#cerberus" },
+    { key: "hercules", world: "Olympus Coliseum", name: "Hercules", hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#hercules" },
+    { key: "hades", world: "Olympus Coliseum", name: "Hades", hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#hades" },
+    { key: "rockTitan", world: "Olympus Coliseum", name: "Rock Titan", hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#rock-titan" },
+    { key: "iceTitan", world: "Olympus Coliseum", name: "Ice Titan", hint: "", url: "https://www.khguides.com/kh/combat/bosses/ice-titan/" },
+    { key: "sephiroth", world: "Olympus Coliseum", name: "Sephiroth", hint: "", url: "https://www.khguides.com/kh/combat/bosses/sephiroth/" },
+
+    { key: "sabor", world: "Deep Jungle", name: "Sabor", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#sabor" },
+    { key: "clayton", world: "Deep Jungle", name: "Clayton", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#stealth-sneak" },
+    { key: "stealthSneak", world: "Deep Jungle", name: "Stealth Sneak", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#stealth-sneak" },
+
+    { key: "potCentipede", world: "Agrabah", name: "Pot Centipede", hint: "", url: "https://www.khguides.com/kh/agrabah/#pot-centipede" },
+    { key: "caveGuardian", world: "Agrabah", name: "Cave of Wonders Guardian", hint: "", url: "https://www.khguides.com/kh/agrabah/#cave-of-wonders" },
+    { key: "jafar", world: "Agrabah", name: "Jafar", hint: "", url: "https://www.khguides.com/kh/agrabah/#jafar" },
+    { key: "genieJafar", world: "Agrabah", name: "Genie Jafar", hint: "", url: "https://www.khguides.com/kh/agrabah/#jafar-genie" },
+    { key: "kurtZisa", world: "Agrabah", name: "Kurt Zisa", hint: "", url: "https://www.khguides.com/kh/combat/bosses/kurt-zisa/" },
+
+    { key: "parasiteCage1", world: "Monstro", name: "Parasite Cage - First Battle", hint: "", url: "https://www.khguides.com/kh/monstro/#parasite-cage" },
+    { key: "parasiteCage2", world: "Monstro", name: "Parasite Cage - Second Battle", hint: "", url: "https://www.khguides.com/kh/monstro/#parasite-cage2" },
+
+    { key: "shark", world: "Atlantica", name: "The Shark", hint: "", url: "https://www.khguides.com/kh/atlantica/#shark" },
+    { key: "ursula1", world: "Atlantica", name: "Ursula - First Battle", hint: "", url: "https://www.khguides.com/kh/atlantica/#ursula" },
+    { key: "ursulaFinal", world: "Atlantica", name: "Ursula - Final Battle", hint: "", url: "https://www.khguides.com/kh/atlantica/#giant-ursula" },
+
+    { key: "lockShockBarrel", world: "Halloween Town", name: "Lock, Shock, and Barrel", hint: "", url: "https://www.khguides.com/kh/halloween-town/#lock-shock-barrel" },
+    { key: "oogieBoogie", world: "Halloween Town", name: "Oogie Boogie", hint: "", url: "https://www.khguides.com/kh/halloween-town/#oogie-boogie" },
+    { key: "oogieManor", world: "Halloween Town", name: "Oogie's Manor", hint: "", url: "https://www.khguides.com/kh/halloween-town/#oogies-manor" },
+
+    { key: "antiSora", world: "Neverland", name: "AntiSora", hint: "", url: "https://www.khguides.com/kh/neverland/#anti-sora" },
+    { key: "captainHook", world: "Neverland", name: "Captain Hook", hint: "", url: "https://www.khguides.com/kh/neverland/#captain-hook" },
+    { key: "phantom", world: "Neverland", name: "Phantom", hint: "", url: "https://www.khguides.com/kh/combat/bosses/phantom/" },
+
+    { key: "riku", world: "Hollow Bastion", name: "Riku", hint: "", url: "https://www.khguides.com/kh/hollow-bastion/#riku" },
+    { key: "maleficent", world: "Hollow Bastion", name: "Maleficent", hint: "", url: "https://www.khguides.com/kh/hollow-bastion/#maleficent" },
+    { key: "dragonMaleficent", world: "Hollow Bastion", name: "Dragon Maleficent", hint: "", url: "https://www.khguides.com/kh/hollow-bastion/#maleficent-dragon" },
+    { key: "rikuAnsem", world: "Hollow Bastion", name: "Riku-Ansem", hint: "", url: "https://www.khguides.com/kh/hollow-bastion/#ansem-riku" },
+    { key: "behemoth", world: "Hollow Bastion", name: "Behemoth", hint: "", url: "https://www.khguides.com/kh/hollow-bastion/#behemoth" },
+    { key: "unknown", world: "Hollow Bastion", name: "Unknown", hint: "", url: "https://www.khguides.com/kh/combat/bosses/unknown/" },
+
+    { key: "chernabog", world: "End of the World", name: "Chernabog", hint: "", url: "https://www.khguides.com/kh/end-of-the-world/#chernabog" },
     {
-      world: "Traverse Town",
-      name: "Red Armor",
-      completionSource: {
-        type: "completionBoolean",
-        key: "redArmorJournal"
-      },
+      key: "ansem",
+      world: "End of the World",
+      name: "Ansem, Seeker of Darkness",
       hint: "",
-      url: "https://www.khguides.com/kh/combat/bosses/"
-    },
-
-    { world: "Wonderland", name: "Trickmaster", completionSource: null, hint: "", url: "https://www.khguides.com/kh/wonderland/#trickmaster" },
-
-    { world: "Olympus Coliseum", name: "Cloud",       completionSource: null, hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#cloud" },
-    { world: "Olympus Coliseum", name: "Cerberus",    completionSource: { type: "journalCharacter", key: "cerberus" }, hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#cerberus" },
-    { world: "Olympus Coliseum", name: "Hercules",    completionSource: null, hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#hercules" },
-    { world: "Olympus Coliseum", name: "Hades",       completionSource: null, hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#hades" },
-    { world: "Olympus Coliseum", name: "Rock Titan",  completionSource: null, hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#rock-titan" },
-    {
-      world: "Olympus Coliseum",
-      name: "Ice Titan",
-      completionSource: {
-        type: "completionBoolean",
-        key: "iceTitanDefeated"
-      },
-      hint: "",
-      url: "https://www.khguides.com/kh/combat/bosses/ice-titan/"
+      url: "https://www.khguides.com/kh/end-of-the-world/#ansem",
+      trackingNote: "Uses End of the World's maximum saveable progress because KH1 does not preserve a normal post-final-boss clear save."
     },
     {
-      world: "Olympus Coliseum",
-      name: "Sephiroth",
-      completionSource: {
-        type: "completionBoolean",
-        key: "sephirothDefeated"
-      },
+      key: "darksideFinal",
+      world: "End of the World",
+      name: "Darkside - Final",
       hint: "",
-      url: "https://www.khguides.com/kh/combat/bosses/sephiroth/"
+      url: "https://www.khguides.com/kh/end-of-the-world/#ansem-solo",
+      trackingNote: "Uses End of the World's maximum saveable progress because KH1 does not preserve a normal post-final-boss clear save."
     },
-
-    { world: "Deep Jungle", name: "Sabor",         completionSource: null, hint: "", url: "https://www.khguides.com/kh/deep-jungle/#sabor" },
-    { world: "Deep Jungle", name: "Clayton",       completionSource: null, hint: "", url: "https://www.khguides.com/kh/deep-jungle/#stealth-sneak" },
-    { world: "Deep Jungle", name: "Stealth Sneak", completionSource: null, hint: "", url: "https://www.khguides.com/kh/deep-jungle/#stealth-sneak" },
-    { world: "Deep Jungle", name: "Sneak Army",    completionSource: null, hint: "", url: "https://www.khguides.com/kh/combat/bosses/" },
-
-    { world: "Agrabah", name: "Pot Centipede",             completionSource: null, hint: "", url: "https://www.khguides.com/kh/agrabah/#pot-centipede" },
-    { world: "Agrabah", name: "Cave of Wonders Guardian",  completionSource: null, hint: "", url: "https://www.khguides.com/kh/agrabah/#cave-of-wonders" },
-    { world: "Agrabah", name: "Jafar",                     completionSource: null, hint: "", url: "https://www.khguides.com/kh/agrabah/#jafar" },
-    { world: "Agrabah", name: "Genie Jafar",               completionSource: null, hint: "", url: "https://www.khguides.com/kh/agrabah/#jafar-genie" },
-    { world: "Agrabah", name: "Kurt Zisa",                 completionSource: null, hint: "", url: "https://www.khguides.com/kh/combat/bosses/kurt-zisa/" },
-
-    { world: "Monstro", name: "Parasite Cage - First Battle",  completionSource: null, hint: "", url: "https://www.khguides.com/kh/monstro/#parasite-cage" },
-    { world: "Monstro", name: "Parasite Cage - Second Battle", completionSource: null, hint: "", url: "https://www.khguides.com/kh/monstro/#parasite-cage2" },
-
-    { world: "Atlantica", name: "The Shark",       completionSource: null, hint: "", url: "https://www.khguides.com/kh/atlantica/#shark" },
-    { world: "Atlantica", name: "Ursula - First Battle",  completionSource: null, hint: "", url: "https://www.khguides.com/kh/atlantica/#ursula" },
-    { world: "Atlantica", name: "Ursula - Final Battle",  completionSource: null, hint: "", url: "https://www.khguides.com/kh/atlantica/#giant-ursula" },
-
-    { world: "Halloween Town", name: "Lock, Shock, and Barrel", completionSource: null, hint: "", url: "https://www.khguides.com/kh/halloween-town/#lock-shock-barrel" },
-    { world: "Halloween Town", name: "Oogie Boogie",            completionSource: null, hint: "", url: "https://www.khguides.com/kh/halloween-town/#oogie-boogie" },
-    { world: "Halloween Town", name: "Oogie's Manor",           completionSource: null, hint: "", url: "https://www.khguides.com/kh/halloween-town/#oogies-manor" },
-
-    { world: "Neverland", name: "AntiSora",      completionSource: null, hint: "", url: "https://www.khguides.com/kh/neverland/#anti-sora" },
-    { world: "Neverland", name: "Captain Hook",  completionSource: null, hint: "", url: "https://www.khguides.com/kh/neverland/#captain-hook" },
-    { world: "Neverland", name: "Phantom",       completionSource: null, hint: "", url: "https://www.khguides.com/kh/combat/bosses/phantom/" },
-
-    { world: "Hollow Bastion", name: "Riku",                  completionSource: null, hint: "", url: "https://www.khguides.com/kh/hollow-bastion/#riku" },
-    { world: "Hollow Bastion", name: "Maleficent",            completionSource: null, hint: "", url: "https://www.khguides.com/kh/hollow-bastion/#maleficent" },
-    { world: "Hollow Bastion", name: "Dragon Maleficent",     completionSource: null, hint: "", url: "https://www.khguides.com/kh/hollow-bastion/#maleficent-dragon" },
-    { world: "Hollow Bastion", name: "Riku-Ansem",            completionSource: null, hint: "", url: "https://www.khguides.com/kh/hollow-bastion/#ansem-riku" },
-    { world: "Hollow Bastion", name: "Behemoth",              completionSource: null, hint: "", url: "https://www.khguides.com/kh/hollow-bastion/#behemoth" },
-    { world: "Hollow Bastion", name: "Unknown",               completionSource: null, hint: "", url: "https://www.khguides.com/kh/combat/bosses/unknown/" },
-
-    { world: "End of the World", name: "Chernabog",                completionSource: null, hint: "", url: "https://www.khguides.com/kh/end-of-the-world/#chernabog" },
-    { world: "End of the World", name: "Ansem, Seeker of Darkness", completionSource: null, hint: "", url: "https://www.khguides.com/kh/end-of-the-world/#ansem" },
-    { world: "End of the World", name: "Darkside - Final",         completionSource: null, hint: "", url: "https://www.khguides.com/kh/end-of-the-world/#ansem-solo" },
-    { world: "End of the World", name: "World of Chaos",           completionSource: null, hint: "", url: "https://www.khguides.com/kh/end-of-the-world/#world-of-chaos" }
+    {
+      key: "worldOfChaos",
+      world: "End of the World",
+      name: "World of Chaos",
+      hint: "",
+      url: "https://www.khguides.com/kh/end-of-the-world/#world-of-chaos",
+      trackingNote: "Uses End of the World's maximum saveable progress because KH1 does not preserve a normal post-final-boss clear save."
+    }
   ],
 
   /*
-   * Minigames outside the Coliseum.
+   * Jiminy's Journal Mini Games.
    *
-   * Their persistent "finished" save flags are not mapped yet.
-   * Add statusSource when discovered.
+   * This is the actual 8-entry Journal list. Destiny Islands duels/race were
+   * removed because they are not part of the Journal Mini Games section.
+   *
+   * Binary completion/score mappings live in KH1_MINIGAME_STATES.
    */
   MINIGAMES: [
-    { world: "Destiny Islands", name: "Dueling Tidus, Selphie, and Wakka", statusSource: null, hint: "", url: "https://www.khguides.com/kh/side-quests/" },
-    { world: "Destiny Islands", name: "Dueling Riku",                     statusSource: null, hint: "", url: "https://www.khguides.com/kh/side-quests/" },
-    { world: "Destiny Islands", name: "Racing Riku",                      statusSource: null, hint: "", url: "https://www.khguides.com/kh/side-quests/" },
+    { key: "jungleSlider", world: "Deep Jungle", name: "Jungle Slider", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#jungle-slider" },
+    { key: "vineJump", world: "Deep Jungle", name: "Vine Jump", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#vine-jump" },
 
-    { world: "Deep Jungle", name: "Jungle Slider", statusSource: null, hint: "", url: "https://www.khguides.com/kh/deep-jungle/#jungle-slider" },
-    { world: "Deep Jungle", name: "Vine Swinging", statusSource: null, hint: "", url: "https://www.khguides.com/kh/deep-jungle/#vine-jump" },
+    { key: "poohHunnyHunt", world: "100 Acre Wood", name: "Pooh's Hunny Hunt", hint: "", url: "https://www.khguides.com/kh/hundred-acre-wood/#page1" },
+    { key: "blockTigger", world: "100 Acre Wood", name: "Block Tigger", hint: "", url: "https://www.khguides.com/kh/hundred-acre-wood/#page2" },
+    { key: "poohSwing", world: "100 Acre Wood", name: "Pooh's Swing", hint: "", url: "https://www.khguides.com/kh/hundred-acre-wood/#page3" },
+    { key: "tiggerGiantPot", world: "100 Acre Wood", name: "Tigger's Giant Pot", hint: "", url: "https://www.khguides.com/kh/hundred-acre-wood/#page4" },
+    { key: "poohMuddyPath", world: "100 Acre Wood", name: "Pooh's Muddy Path", hint: "", url: "https://www.khguides.com/kh/hundred-acre-wood/#page5" },
 
     {
-      world: "100 Acre Wood",
-      name: "Pooh's Hunny Hunt",
-      statusSource: {
-        type: "acreWoodMinigame",
-        key: "poohHunnyHunt"
-      },
+      key: "olympusColiseum",
+      world: "Olympus Coliseum",
+      name: "Olympus Coliseum",
       hint: "",
-      url: "https://www.khguides.com/kh/hundred-acre-wood/#page1"
-    },
-    {
-      world: "100 Acre Wood",
-      name: "Block Tigger",
-      statusSource: {
-        type: "acreWoodMinigame",
-        key: "blockTigger"
-      },
-      hint: "",
-      url: "https://www.khguides.com/kh/hundred-acre-wood/#page2"
-    },
-    { world: "100 Acre Wood", name: "Pooh's Swing",        statusSource: null, hint: "", url: "https://www.khguides.com/kh/hundred-acre-wood/#page3" },
-    { world: "100 Acre Wood", name: "Tigger's Giant Pot",  statusSource: null, hint: "", url: "https://www.khguides.com/kh/hundred-acre-wood/#page4" },
-    { world: "100 Acre Wood", name: "Pooh's Muddy Path",   statusSource: null, hint: "", url: "https://www.khguides.com/kh/hundred-acre-wood/#page5" }
+      url: "https://www.khguides.com/kh/olympus-coliseum/",
+      trackingNote: "The Journal entry contains four confirmed time-trial record fields for the Phil, Pegasus, Hercules, and Hades Cups."
+    }
   ],
 
   /*
@@ -811,6 +811,8 @@ const KH1_CONTENT = Object.freeze({
   /*
    * Gummi Ship Blueprint completion.
    * Names come from kh1-dictionary.js; this file only controls UI grouping.
+   * The 48-entry PC order is accepted for the project after user spot-checks
+   * confirmed the tested one-hot blueprint slots matched the expected names.
    */
   GUMMI_BLUEPRINT_URL: "https://www.khguides.com/kh/collectibles/gummis/",
 

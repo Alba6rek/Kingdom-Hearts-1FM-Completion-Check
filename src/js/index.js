@@ -284,7 +284,6 @@ function BuildExternalName(
       title="Open external information for ${EscapeHTML(name)}"
     >
       ${content}
-      <span class="external-link-mark" aria-hidden="true">↗</span>
     </a>
   `;
 }
@@ -295,19 +294,35 @@ function BuildEntry({
   description = "",
   hint = "",
   state = "info",
-  spoiler = false,
+  spoiler = null,
   url = "",
   external = false
 }) {
+  /*
+   * Completion entries should be spoiler-safe by default.
+   *
+   * A caller can still explicitly pass:
+   *   spoiler: false
+   * for labels that are intentionally always visible (for example postcard
+   * sequence numbers).
+   */
+  const resolvedSpoiler =
+    spoiler === null
+      ? (
+          state === "missing" ||
+          state === "partial"
+        )
+      : Boolean(spoiler);
+
   const nameHtml =
     external
       ? BuildExternalName(
           name,
           url,
-          spoiler
+          resolvedSpoiler
         )
       : (
-          spoiler
+          resolvedSpoiler
             ? SpoilerText(name)
             : EscapeHTML(name)
         );
@@ -333,7 +348,7 @@ function BuildEntry({
               <span
                 class="entry-hint"
                 tabindex="0"
-                aria-label="Hidden hint. Hover or focus to reveal."
+                aria-label="Hint. Hover or focus to reveal the hint text."
               >
                 <strong class="hint-label">Hint:</strong>
                 <span class="hint-text">
@@ -812,11 +827,27 @@ function RenderWorlds(slot) {
    * because Monstro and End of the World require special completion rules.
    * ParseWorldStatus() already calculates the correct `complete` value.
    */
+  const acreWood =
+    slot.completion
+      .acreWoodPages;
+
+  const acreWoodComplete =
+    Boolean(
+      acreWood &&
+      acreWood.convertedCount >=
+        acreWood.target
+    );
+
   const completed =
     worlds.filter(
       world =>
         world.complete
-    ).length;
+    ).length +
+    (acreWoodComplete ? 1 : 0);
+
+  const worldTarget =
+    worlds.length +
+    (acreWood ? 1 : 0);
 
   const worldRows =
     worlds.map(
@@ -870,14 +901,16 @@ function RenderWorlds(slot) {
             !world.complete,
 
           external:
-            true
+            true,
+
+          url:
+            KH1_CONTENT
+              .WORLD_PROGRESS_URLS
+              ?.[world.name] ??
+            ""
         });
       }
     );
-
-  const acreWood =
-    slot.completion
-      .acreWoodPages;
 
   if (acreWood) {
     worldRows.push(
@@ -897,8 +930,17 @@ function RenderWorlds(slot) {
             acreWood.target
           ),
 
+        spoiler:
+          !acreWoodComplete,
+
         external:
-          true
+          true,
+
+        url:
+          KH1_CONTENT
+            .WORLD_PROGRESS_URLS
+            ?.["100 Acre Wood"] ??
+          ""
       })
     );
   }
@@ -906,7 +948,7 @@ function RenderWorlds(slot) {
   return BuildProgressSection(
     "World Progress",
     completed,
-    worlds.length,
+    worldTarget,
     worldRows.join(""),
     "World-map status and story-progress bytes are kept separately. Monstro and End of the World use special story-progress completion rules.",
     true
@@ -1179,108 +1221,202 @@ function RenderMainTab(slot) {
    Essentials tab
 --------------------------------------------------------------------------- */
 
+function GetTrinityDisplayState(
+  mark,
+  markStates
+) {
+  const exactState =
+    markStates[
+      mark.testNumber
+    ] ?? null;
+
+  const mapped =
+    Number.isInteger(
+      exactState?.offset
+    ) &&
+    Number.isInteger(
+      exactState?.mask
+    ) &&
+    typeof exactState?.found ===
+      "boolean";
+
+  if (!mapped) {
+    return {
+      ...mark,
+      mapped: false,
+      found: null,
+      value: "Unknown",
+      state: "unknown",
+      description:
+        "Action-dependent independent flag is still pending. Color counters are intentionally not used as a fallback."
+    };
+  }
+
+  const offsetText =
+    `0x${exactState.offset
+      .toString(16)
+      .toUpperCase()}`;
+
+  const maskText =
+    `0x${exactState.mask
+      .toString(16)
+      .toUpperCase()
+      .padStart(2, "0")}`;
+
+  return {
+    ...mark,
+    mapped: true,
+    found:
+      exactState.found,
+    value:
+      exactState.found
+        ? "Found"
+        : "Not Found",
+    state:
+      exactState.found
+        ? "complete"
+        : "missing",
+    description:
+      `Independent Trinity flag: ${offsetText} mask ${maskText}.`
+  };
+}
+
+function RenderTrinityMark(mark) {
+  return BuildEntry({
+    name:
+      mark.name,
+
+    value:
+      mark.value,
+
+    description:
+      mark.description,
+
+    hint:
+      mark.hint,
+
+    state:
+      mark.state,
+
+    spoiler:
+      mark.state !==
+        "complete",
+
+    external:
+      true,
+
+    url:
+      mark.url
+  });
+}
+
 function RenderTrinity(slot) {
   const trinity =
     slot.completion.trinity;
 
+  const markStates =
+    trinity.markStates ?? {};
+
   /*
-   * IMPORTANT:
+   * Build each physical Trinity exactly once. The same decoded rows are then
+   * used for both display and summary counts, so rendering cannot disagree
+   * with the section totals.
    *
-   * The save currently gives us only the number of found Trinity marks per
-   * color. It does not yet tell us the identity of each exact world location.
-   *
-   * Therefore these individual rows are COUNT-BASED progress slots.
-   * They are useful for a 46-line completion checklist, but should not yet be
-   * interpreted as exact physical location flags.
+   * The color counters at 0x1C66..0x1C6B stay available in parsed JSON for
+   * research, but they never determine an individual physical location.
    */
   const groups =
     KH1_CONTENT.TRINITY_MARKS
       .map(
-        group => {
-          const current =
-            trinity.counts[
-              group.color
-            ] ?? 0;
-
-          const isUnlocked =
+        group => ({
+          ...group,
+          unlocked:
             trinity.unlocked.includes(
               group.color
-            );
+            ),
+          marks:
+            group.marks.map(
+              mark =>
+                GetTrinityDisplayState(
+                  mark,
+                  markStates
+                )
+            )
+        })
+      );
 
-          const marks =
-            group.marks
-              .map(
-                mark => {
-                  const found =
-                    mark.number <=
-                    current;
+  const allMarks =
+    groups.flatMap(
+      group =>
+        group.marks
+    );
 
-                  return BuildEntry({
-                    name:
-                      mark.name,
+  const mappedCount =
+    allMarks.filter(
+      mark =>
+        mark.mapped
+    ).length;
 
-                    value:
-                      found
-                        ? "Found"
-                        : "Not Found",
+  const foundCount =
+    allMarks.filter(
+      mark =>
+        mark.found === true
+    ).length;
 
-                    description:
-                      "Count-based progress row. Exact physical Trinity location flag is not mapped yet.",
+  const pendingCount =
+    allMarks.length -
+    mappedCount;
 
-                    hint:
-                      mark.hint,
+  const body =
+    groups.map(
+      group => `
+        <details
+          class="nested-list"
+          open
+        >
+          <summary>
+            ${EscapeHTML(group.color)} Trinity
+          </summary>
 
-                    state:
-                      found
-                        ? "complete"
-                        : "missing",
+          <p class="nested-description">
+            ${
+              group.unlocked
+                ? "Each location below has its own independent status. No color-counter inference is used."
+                : "This Trinity ability is not unlocked in the selected save. Individual location flags are still shown independently below."
+            }
+          </p>
 
-                    spoiler:
-                      !found,
+          <div class="section-block">
+            ${
+              group.marks
+                .map(
+                  RenderTrinityMark
+                )
+                .join("")
+            }
+          </div>
+        </details>
+      `
+    ).join("");
 
-                    external:
-                      true,
+  return BuildCollapsibleSection({
+    title:
+      "Trinity Marks",
 
-                    url:
-                      mark.url
-                  });
-                }
-              )
-              .join("");
+    body,
 
-          return `
-            <details
-              class="nested-list"
-              ${current > 0 ? "open" : ""}
-            >
-              <summary>
-                ${EscapeHTML(group.color)} Trinity
-                <span>${current}/${group.marks.length}</span>
-              </summary>
+    description:
+      "Every physical Trinity is tracked as an independent completion row. The five Trinity color counters are retained only as research data and never determine an individual row. The eight action-dependent locations remain Unknown until their own environmental/action flags are mapped.",
 
-              ${
-                !isUnlocked
-                  ? `<p class="nested-description">Trinity ability is not unlocked yet.</p>`
-                  : ""
-              }
+    summaryRight:
+      `${foundCount} found · ${mappedCount} mapped · ${pendingCount} pending`,
 
-              <div class="section-block">
-                ${marks}
-              </div>
-            </details>
-          `;
-        }
-      )
-      .join("");
+    open:
+      true,
 
-  return BuildProgressSection(
-    "Trinity Marks",
-    trinity.foundTotal,
-    46,
-    groups,
-    "All 46 progress rows are shown individually. Current statuses are derived from each color's found counter until exact location flags are mapped.",
-    true
-  );
+    sectionClass:
+      "trinity-independent-section"
+  });
 }
 
 function RenderColiseum(slot) {
@@ -1361,6 +1497,9 @@ function RenderColiseum(slot) {
               entry.hint,
 
             state,
+
+            spoiler:
+              state !== "complete",
 
             external:
               true,
@@ -1843,6 +1982,10 @@ function RenderJournalCharacters(slot) {
                           )
                         : "unknown",
 
+                    spoiler:
+                      !status.known ||
+                      !status.complete,
+
                     external:
                       true,
 
@@ -1987,86 +2130,192 @@ function RenderBosses(slot) {
       "world"
     );
 
-  let knownCount =
-    0;
-
-  let completedKnown =
-    0;
+  const analysis =
+    slot.completionAnalysis
+      ?.bosses ?? {
+        current: 0,
+        mappedTarget: 0,
+        target: KH1_CONTENT.BOSSES.length,
+        percent: 0,
+        unknownCount: KH1_CONTENT.BOSSES.length
+      };
 
   const body =
-    Object.entries(groups)
+    Object.entries(
+      groups
+    )
       .map(
         ([world, bosses]) => {
+          let worldMapped =
+            0;
+
+          let worldDefeated =
+            0;
+
           const entries =
-            bosses.map(
-              boss => {
-                const status =
-                  ResolveCompletionSource(
-                    slot,
-                    boss.completionSource
-                  );
+            bosses
+              .map(
+                boss => {
+                  const status =
+                    slot.completion
+                      .bosses
+                      ?.entries
+                      ?.[boss.key] ??
+                    null;
 
-                if (
-                  status.known
-                ) {
-                  knownCount++;
+                  if (status) {
+                    worldMapped++;
 
-                  if (
-                    status.complete
-                  ) {
-                    completedKnown++;
+                    if (
+                      status.complete
+                    ) {
+                      worldDefeated++;
+                    }
                   }
+
+                  const technicalDetails =
+                    status
+                      ? [
+                          status.offsetHex,
+                          status.maskHex,
+                          status.thresholdHex,
+                          status.report
+                            ? `Report ${status.report}`
+                            : null
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")
+                      : "";
+
+                  let description =
+                    "";
+
+                  if (status) {
+                    const evidenceLabel =
+                      status.evidence ===
+                      "confirmed"
+                        ? "Confirmed mapping"
+                        : status.evidence ===
+                          "strong"
+                          ? "Strong persistent progress mapping"
+                          : status.evidence ===
+                            "battle-clear proxy"
+                            ? "Battle-clear proxy"
+                            : status.evidence ===
+                              "direct defeat reward"
+                              ? "Direct defeat reward"
+                              : status.evidence ===
+                                "confirmed external save mapping"
+                                ? "Confirmed persistent save mapping"
+                                : status.evidence ===
+                                  "max saveable progress"
+                                  ? "Maximum saveable progress"
+                                  : status.evidence;
+
+                    description =
+                      [
+                        evidenceLabel,
+                        technicalDetails
+                      ]
+                        .filter(Boolean)
+                        .join(" · ");
+                  } else {
+                    description =
+                      boss.trackingNote ??
+                      "Persistent boss completion state still needs controlled mapping.";
+                  }
+
+                  return BuildEntry({
+                    name:
+                      boss.name,
+
+                    value:
+                      status
+                        ? (
+                            status.complete
+                              ? (
+                                  status.maxSaveable
+                                    ? "Complete (max saveable progress)"
+                                    : "Defeated"
+                                )
+                              : (
+                                  status.maxSaveable
+                                    ? "Not Complete"
+                                    : "Not Defeated"
+                                )
+                          )
+                        : "Mapping needed",
+
+                    description,
+
+                    hint:
+                      boss.hint,
+
+                    state:
+                      status
+                        ? (
+                            status.complete
+                              ? "complete"
+                              : "missing"
+                          )
+                        : "unknown",
+
+                    spoiler:
+                      Boolean(
+                        status &&
+                        !status.complete
+                      ),
+
+                    external:
+                      true,
+
+                    url:
+                      boss.url
+                  });
                 }
+              )
+              .join("");
 
-                return BuildEntry({
-                  name:
-                    boss.name,
+          const worldUnknown =
+            bosses.length -
+            worldMapped;
 
-                  value:
-                    status.known
-                      ? (
-                          status.complete
-                            ? "Defeated"
-                            : "Not Defeated"
-                        )
-                      : "Mapping needed",
-
-                  description:
-                    status.known
-                      ? "Persistent completion source is currently mapped."
-                      : "Boss is listed so its persistent save flag can be identified later.",
-
-                  hint:
-                    boss.hint,
-
-                  state:
-                    status.known
-                      ? (
-                          status.complete
-                            ? "complete"
-                            : "missing"
-                        )
-                      : "unknown",
-
-                  spoiler:
-                    status.known &&
-                    !status.complete,
-
-                  external:
-                    true,
-
-                  url:
-                    boss.url
-                });
-              }
-            ).join("");
+          const worldPercent =
+            Percent(
+              worldDefeated,
+              worldMapped
+            );
 
           return `
             <details class="nested-list">
               <summary>
                 ${EscapeHTML(world)}
-                <span>${bosses.length}</span>
+                <span>
+                  ${
+                    worldMapped > 0
+                      ? `${worldDefeated}/${worldMapped} mapped · ${worldPercent}%`
+                      : "Mapping needed"
+                  }
+                  ${
+                    worldUnknown > 0
+                      ? ` · ${worldUnknown} ?`
+                      : ""
+                  }
+                </span>
               </summary>
+
+              ${
+                worldMapped > 0
+                  ? `
+                    <div class="progress-track">
+                      <div
+                        class="progress-fill ${worldDefeated >= worldMapped ? "complete" : ""}"
+                        style="width:${worldPercent}%"
+                      ></div>
+                    </div>
+                  `
+                  : ""
+              }
 
               <div class="section-block">
                 ${entries}
@@ -2077,14 +2326,39 @@ function RenderBosses(slot) {
       )
       .join("");
 
+  const overallPercent =
+    Percent(
+      analysis.current,
+      analysis.mappedTarget
+    );
+
   return BuildCollapsibleSection({
     title:
       "Bosses",
 
-    body,
+    body:
+      `
+        ${
+          analysis.mappedTarget > 0
+            ? `
+              <div class="progress-track">
+                <div
+                  class="progress-fill ${analysis.current >= analysis.mappedTarget ? "complete" : ""}"
+                  style="width:${overallPercent}%"
+                ></div>
+              </div>
+            `
+            : ""
+        }
+
+        ${body}
+      `,
 
     description:
-      `${completedKnown}/${knownCount} currently mapped boss flags are complete. Unmapped bosses remain visible for future reverse engineering.`,
+      `${analysis.current}/${analysis.mappedTarget} mapped boss completion entries are complete. The final Ansem / Darkside / World of Chaos sequence follows the same maximum-saveable-progress rule as End of the World because KH1 has no normal post-final-boss clear save.`,
+
+    summaryRight:
+      `${analysis.current}/${analysis.mappedTarget} · ${overallPercent}%`,
 
     open:
       false
@@ -2098,78 +2372,306 @@ function RenderMinigames(slot) {
       "world"
     );
 
+  const analysis =
+    slot.completionAnalysis
+      ?.minigames ?? {
+        current: 0,
+        mappedTarget: 0,
+        target: KH1_CONTENT.MINIGAMES.length,
+        percent: 0,
+        unknownCount: KH1_CONTENT.MINIGAMES.length
+      };
+
+  /*
+   * Jungle Slider, Vine Jump and Olympus Coliseum are Journal categories
+   * containing several individual course/cup records. Render them as nested
+   * completion lists, matching the way the five 100 Acre Wood minigames are
+   * presented as individual completion entries.
+   *
+   * Jungle Slider / Vine Jump technically store a top-5 leaderboard for each
+   * course. The completion tracker intentionally shows ONLY leaderboard
+   * record #1, per project design. The remaining four raw records are still
+   * preserved by the parser/research data and are not discarded.
+   */
+  function RenderSubrecordMinigame(
+    minigame,
+    status
+  ) {
+    const subrecords =
+      status.subrecords ??
+      [];
+
+    const completed =
+      subrecords.filter(
+        subrecord =>
+          subrecord.complete
+      ).length;
+
+    const total =
+      subrecords.length;
+
+    const percent =
+      Percent(
+        completed,
+        total
+      );
+
+    /*
+     * Parent/category names are navigation labels, not undiscovered rewards.
+     *
+     * Keep Jungle Slider, Vine Jump, and Olympus Coliseum visible even when
+     * some/all of their child course records are still missing. Only the
+     * individual missing subrecords are spoiler-hidden.
+     */
+    const parentName =
+      BuildExternalName(
+        minigame.name,
+        minigame.url,
+        false
+      );
+
+    const entries =
+      subrecords
+        .map(
+          subrecord => {
+            /*
+             * For leaderboard-based courses this is specifically record #1,
+             * not every available top-5 record.
+             * For Olympus each cup only has one saved record, so the same
+             * field works for both structures.
+             */
+            const firstRecord =
+              subrecord.records?.[0] ??
+              subrecord.bestRecord ??
+              null;
+
+            const hasRecord =
+              Boolean(
+                firstRecord &&
+                firstRecord.available
+              );
+
+            const value =
+              hasRecord
+                ? firstRecord.display
+                : "No record";
+
+            const description =
+              firstRecord?.offsetHex
+                ? `1st record · ${firstRecord.offsetHex}`
+                : "1st record";
+
+            return BuildEntry({
+              name:
+                subrecord.name,
+
+              value,
+
+              description,
+
+              state:
+                hasRecord
+                  ? "complete"
+                  : "missing",
+
+              spoiler:
+                !hasRecord,
+
+              external:
+                true,
+
+              url:
+                minigame.url
+            });
+          }
+        )
+        .join("");
+
+    return `
+      <details class="nested-list minigame-record-list">
+        <summary>
+          <span class="minigame-record-title">
+            ${parentName}
+          </span>
+
+          <span>
+            ${completed}/${total} · ${percent}%
+          </span>
+        </summary>
+
+        <div class="progress-track">
+          <div
+            class="progress-fill ${completed >= total ? "complete" : ""}"
+            style="width:${percent}%"
+          ></div>
+        </div>
+
+        <div class="section-block">
+          ${entries}
+        </div>
+      </details>
+    `;
+  }
+
   const body =
-    Object.entries(groups)
+    Object.entries(
+      groups
+    )
       .map(
         ([world, minigames]) => {
+          let worldMapped =
+            0;
+
+          let worldFinished =
+            0;
+
           const entries =
-            minigames.map(
-              minigame => {
-                const status =
-                  ResolveCompletionSource(
-                    slot,
-                    minigame.statusSource
-                  );
+            minigames
+              .map(
+                minigame => {
+                  const status =
+                    slot.completion
+                      .minigames
+                      ?.entries
+                      ?.[minigame.key] ??
+                    null;
 
-                return BuildEntry({
-                  name:
-                    minigame.name,
+                  if (status) {
+                    worldMapped++;
 
-                  value:
-                    status.known
-                      ? (
-                          status.complete
-                            ? (
-                                status.data?.score !== null &&
-                                status.data?.score !== undefined
-                                  ? `Finished · Score ${Number(status.data.score).toLocaleString()}`
-                                  : "Finished"
-                              )
-                            : "Not Finished"
-                        )
-                      : "Mapping needed",
+                    if (
+                      status.complete
+                    ) {
+                      worldFinished++;
+                    }
+                  }
 
-                  description:
-                    status.known
-                      ? (
-                          status.data
-                            ? `${status.data.completionOffsetHex} · ${status.data.maskHex}` +
-                              (
-                                status.data.scoreOffsetHex
-                                  ? ` · Score ${status.data.scoreOffsetHex}`
-                                  : ""
-                              )
-                            : ""
-                        )
-                      : "Persistent minigame completion flag has not been identified yet.",
+                  /*
+                   * Nested course/cup categories:
+                   * - Jungle Slider: 5 slider courses
+                   * - Vine Jump: 4 jump courses
+                   * - Olympus Coliseum: 4 cup time-trial records
+                   */
+                  if (
+                    status?.subrecords
+                  ) {
+                    return RenderSubrecordMinigame(
+                      minigame,
+                      status
+                    );
+                  }
 
-                  hint:
-                    minigame.hint,
+                  let value =
+                    "Mapping needed";
 
-                  state:
-                    status.known
-                      ? (
-                          status.complete
-                            ? "complete"
-                            : "missing"
-                        )
-                      : "unknown",
+                  if (status) {
+                    value =
+                      status.complete
+                        ? "Finished"
+                        : "Not Finished";
 
-                  external:
-                    true,
+                    if (
+                      status.scoreDisplay
+                    ) {
+                      value +=
+                        ` · ${status.scoreLabel}: ${status.scoreDisplay}`;
+                    }
+                  }
 
-                  url:
-                    minigame.url
-                });
-              }
-            ).join("");
+                  let description =
+                    "";
+
+                  if (status) {
+                    const evidence =
+                      status.evidence ===
+                      "confirmed"
+                        ? "Confirmed mapping"
+                        : "Strongly inferred mapping";
+
+                    description =
+                      `${evidence} · ` +
+                      `${status.completionOffsetHex} / ${status.maskHex}` +
+                      ` · Score ${status.scoreOffsetHex}`;
+                  } else {
+                    description =
+                      minigame.trackingNote ??
+                      "Persistent finished-state and/or score location still needs controlled mapping.";
+                  }
+
+                  return BuildEntry({
+                    name:
+                      minigame.name,
+
+                    value,
+
+                    description,
+
+                    hint:
+                      minigame.hint,
+
+                    state:
+                      status
+                        ? (
+                            status.complete
+                              ? "complete"
+                              : "missing"
+                          )
+                        : "unknown",
+
+                    spoiler:
+                      !status ||
+                      !status.complete,
+
+                    external:
+                      true,
+
+                    url:
+                      minigame.url
+                  });
+                }
+              )
+              .join("");
+
+          const worldUnknown =
+            minigames.length -
+            worldMapped;
+
+          const worldPercent =
+            Percent(
+              worldFinished,
+              worldMapped
+            );
 
           return `
             <details class="nested-list">
               <summary>
                 ${EscapeHTML(world)}
-                <span>${minigames.length}</span>
+                <span>
+                  ${
+                    worldMapped > 0
+                      ? `${worldFinished}/${worldMapped} mapped · ${worldPercent}%`
+                      : "Mapping needed"
+                  }
+                  ${
+                    worldUnknown > 0
+                      ? ` · ${worldUnknown} ?`
+                      : ""
+                  }
+                </span>
               </summary>
+
+              ${
+                worldMapped > 0
+                  ? `
+                    <div class="progress-track">
+                      <div
+                        class="progress-fill ${worldFinished >= worldMapped ? "complete" : ""}"
+                        style="width:${worldPercent}%"
+                      ></div>
+                    </div>
+                  `
+                  : ""
+              }
 
               <div class="section-block">
                 ${entries}
@@ -2180,14 +2682,39 @@ function RenderMinigames(slot) {
       )
       .join("");
 
+  const overallPercent =
+    Percent(
+      analysis.current,
+      analysis.mappedTarget
+    );
+
   return BuildCollapsibleSection({
     title:
       "Minigames",
 
-    body,
+    body:
+      `
+        ${
+          analysis.mappedTarget > 0
+            ? `
+              <div class="progress-track">
+                <div
+                  class="progress-fill ${analysis.current >= analysis.mappedTarget ? "complete" : ""}"
+                  style="width:${overallPercent}%"
+                ></div>
+              </div>
+            `
+            : ""
+        }
+
+        ${body}
+      `,
 
     description:
-      "The minigame list is present now; finish-state mappings can be filled as their save variables are identified.",
+      `${analysis.current}/${analysis.mappedTarget} Journal mini-games are fully finished. Jungle Slider, Vine Jump, and Olympus Coliseum expand into their individual course/cup entries. Only the 1st leaderboard record is shown for each Jungle Slider and Vine Jump course.`,
+
+    summaryRight:
+      `${analysis.current}/${analysis.mappedTarget} mapped · ${overallPercent}%`,
 
     open:
       false
@@ -2560,7 +3087,7 @@ function RenderGummiBlueprints(slot) {
       .GUMMI_BLUEPRINT_NAMES
       .length,
     groups,
-    "Blueprint ownership is a 48-byte table at 0xBEBF. The supplied one-blueprint-per-slot save pack is intended to directly verify the exact PC index-to-name order.",
+    "Blueprint ownership is a 48-byte table at 0xBEBF. The 48-entry PC index-to-name order is accepted after the user's one-hot blueprint spot-checks matched the expected models.",
     true
   );
 }
@@ -2662,53 +3189,35 @@ function RenderAnalyzerTabs() {
   `;
 }
 
+const ANALYZER_TAB_RENDERERS =
+  Object.freeze({
+    main:
+      RenderMainTab,
+
+    essentials:
+      RenderEssentialsTab,
+
+    journal:
+      RenderJournalTab,
+
+    synthesis:
+      RenderSynthesisTab,
+
+    collectable:
+      RenderCollectableTab,
+
+    extra:
+      RenderExtraTab
+  });
+
 function RenderActiveTab(slot) {
-  if (
-    activeAnalyzerTab ===
-    "essentials"
-  ) {
-    return RenderEssentialsTab(
-      slot
-    );
-  }
+  const renderer =
+    ANALYZER_TAB_RENDERERS[
+      activeAnalyzerTab
+    ] ??
+    RenderMainTab;
 
-  if (
-    activeAnalyzerTab ===
-    "journal"
-  ) {
-    return RenderJournalTab(
-      slot
-    );
-  }
-
-  if (
-    activeAnalyzerTab ===
-    "synthesis"
-  ) {
-    return RenderSynthesisTab(
-      slot
-    );
-  }
-
-  if (
-    activeAnalyzerTab ===
-    "collectable"
-  ) {
-    return RenderCollectableTab(
-      slot
-    );
-  }
-
-  if (
-    activeAnalyzerTab ===
-    "extra"
-  ) {
-    return RenderExtraTab(
-      slot
-    );
-  }
-
-  return RenderMainTab(
+  return renderer(
     slot
   );
 }

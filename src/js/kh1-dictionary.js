@@ -155,10 +155,142 @@ const KH1_DICTIONARY = Object.freeze({
    * Gummi Ship Blueprint names in the in-game blueprint menu order.
    *
    * The 48-byte ownership table begins at save offset 0xBEBF.
-   * Original-model ordering is strongly supported by the legacy individual
-   * blueprint addresses; Final Mix mission-model ordering is being directly
-   * verified with the generated one-blueprint-per-slot test save.
+   * The project now accepts this complete 48-entry PC order. The user
+   * spot-checked the generated one-hot blueprint save and the tested entries
+   * matched the expected names, so the tentative/research label is retired.
    */
+  /*
+   * Boss display names.
+   * Binary rules live in kh1-database.js.
+   */
+  "BOSS_NAMES": Object.freeze({
+    "darkside": "Darkside",
+    "guardArmor": "Guard Armor",
+    "oppositeArmor": "Opposite Armor",
+    "redArmor": "Red Armor",
+    "trickmaster": "Trickmaster",
+    "cloud": "Cloud",
+    "cerberus": "Cerberus",
+    "hercules": "Hercules",
+    "hades": "Hades",
+    "rockTitan": "Rock Titan",
+    "iceTitan": "Ice Titan",
+    "sephiroth": "Sephiroth",
+    "sabor": "Sabor",
+    "clayton": "Clayton",
+    "stealthSneak": "Stealth Sneak",
+    "potCentipede": "Pot Centipede",
+    "caveGuardian": "Cave of Wonders Guardian",
+    "jafar": "Jafar",
+    "genieJafar": "Genie Jafar",
+    "kurtZisa": "Kurt Zisa",
+    "parasiteCage1": "Parasite Cage - First Battle",
+    "parasiteCage2": "Parasite Cage - Second Battle",
+    "shark": "The Shark",
+    "ursula1": "Ursula - First Battle",
+    "ursulaFinal": "Ursula - Final Battle",
+    "lockShockBarrel": "Lock, Shock, and Barrel",
+    "oogieBoogie": "Oogie Boogie",
+    "oogieManor": "Oogie's Manor",
+    "antiSora": "AntiSora",
+    "captainHook": "Captain Hook",
+    "phantom": "Phantom",
+    "riku": "Riku",
+    "maleficent": "Maleficent",
+    "dragonMaleficent": "Dragon Maleficent",
+    "rikuAnsem": "Riku-Ansem",
+    "behemoth": "Behemoth",
+    "unknown": "Unknown",
+    "chernabog": "Chernabog",
+    "ansem": "Ansem, Seeker of Darkness",
+    "darksideFinal": "Darkside - Final",
+    "worldOfChaos": "World of Chaos"
+  }),
+
+  /*
+   * Jiminy's Journal Mini Games.
+   *
+   * The Journal has exactly eight entries:
+   * Jungle Slider, Vine Jump, five Hundred Acre Wood games, and the
+   * Olympus Coliseum time-trial record group.
+   */
+  "MINIGAME_NAMES": Object.freeze({
+    "jungleSlider": "Jungle Slider",
+    "vineJump": "Vine Jump",
+    "poohHunnyHunt": "Pooh's Hunny Hunt",
+    "blockTigger": "Block Tigger",
+    "poohSwing": "Pooh's Swing",
+    "tiggerGiantPot": "Tigger's Giant Pot",
+    "poohMuddyPath": "Pooh's Muddy Path",
+    "olympusColiseum": "Olympus Coliseum"
+  }),
+
+  "MINIGAME_SUBRECORD_NAMES": Object.freeze({
+    "jungleSlider": Object.freeze([
+      "Green Serpent",
+      "Splash Tunnel",
+      "Jade Spiral",
+      "Panic Fall",
+      "Shadow Cavern"
+    ]),
+
+    "vineJump": Object.freeze([
+      "Jump Course",
+      "Trap Course",
+      "Acrobatic Course",
+      "Expert Course"
+    ]),
+
+    "olympusColiseum": Object.freeze([
+      "Phil Cup",
+      "Pegasus Cup",
+      "Hercules Cup",
+      "Hades Cup"
+    ])
+  }),
+
+  "MINIGAME_SCORE_METADATA": Object.freeze({
+    "jungleSlider": Object.freeze({
+      unit: "time",
+      label: "Courses"
+    }),
+
+    "vineJump": Object.freeze({
+      unit: "time",
+      label: "Courses"
+    }),
+
+    "olympusColiseum": Object.freeze({
+      unit: "time",
+      label: "Cup records"
+    }),
+
+    "poohHunnyHunt": Object.freeze({
+      unit: "licks",
+      label: "Record"
+    }),
+
+    "blockTigger": Object.freeze({
+      unit: "points",
+      label: "Record"
+    }),
+
+    "poohSwing": Object.freeze({
+      unit: "yards",
+      label: "Record"
+    }),
+
+    "tiggerGiantPot": Object.freeze({
+      unit: "time",
+      label: "Best time"
+    }),
+
+    "poohMuddyPath": Object.freeze({
+      unit: "time",
+      label: "Best time"
+    })
+  }),
+
   "GUMMI_BLUEPRINT_NAMES": [
     "Kingdom",
     "Hyperion",

@@ -1091,20 +1091,13 @@ input:checked + label .checkmark::after {
   text-underline-offset: 0.15rem;
 }
 
-.external-link-mark {
-  display: inline-block;
-  margin-left: 0.15rem;
-  color: rgba(142, 186, 237, 0.65);
-  font-size: 0.67em;
-  vertical-align: super;
-}
 
 .entry-hint {
   /*
    * Only rendered when the content entry has a non-empty `hint`.
    *
-   * The whole line is hidden by default. The element itself remains visible
-   * as a small placeholder bar so the user has an area to hover.
+   * The "Hint:" label remains visible by default. Only the hint text itself
+   * is hidden until the user hovers or focuses this element.
    */
   display: block;
   width: fit-content;
@@ -1129,13 +1122,15 @@ input:checked + label .checkmark::after {
 }
 
 /*
- * Hide BOTH the "Hint:" label and the actual hint text.
- *
- * `.entry-hint .hint-label` is deliberately more specific than the global
- * `strong { color: ... }` rule, which was one reason the previous version
- * could still look visible.
+ * Keep the "Hint:" label visible so the user knows what the hover area is.
+ * Only the actual hint text remains hidden until hover/focus.
  */
-.entry-hint .hint-label,
+.entry-hint .hint-label {
+  color: rgba(236, 214, 148, 0.96);
+  text-shadow: none;
+  margin-right: 0.18rem;
+}
+
 .entry-hint .hint-text {
   color: transparent;
   text-shadow: none;
@@ -1157,11 +1152,8 @@ input:checked + label .checkmark::after {
   user-select: text;
 }
 
-.entry-hint:hover .hint-label,
 .entry-hint:hover .hint-text,
-.entry-hint:focus .hint-label,
 .entry-hint:focus .hint-text,
-.entry-hint:focus-within .hint-label,
 .entry-hint:focus-within .hint-text {
   color: rgba(236, 214, 148, 0.96);
 }
@@ -1600,4 +1592,41 @@ input:checked + label .checkmark {
 /* Journal character world-level completion bar. */
 .nested-progress-track {
   margin: 0.45rem 0.6rem 0.25rem;
+}
+
+
+/* ------------------------- minigame subrecords ------------------------- */
+
+.minigame-record-list {
+  margin: 0.45rem 0;
+}
+
+.minigame-record-list > summary .minigame-record-title {
+  margin-left: 0;
+  margin-right: auto;
+
+  /*
+   * Match normal completion-entry names such as the 100 Acre Wood items.
+   * .nested-list > summary span normally shrinks summary spans to 0.72rem;
+   * this explicit size keeps these three parent labels visually consistent
+   * with regular .entry-name text.
+   */
+  color: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+/*
+ * The external link inside the parent title should inherit the parent's
+ * visible text treatment and must never receive spoiler blur.
+ */
+.minigame-record-title .entry-link {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.minigame-record-list > .progress-track {
+  margin: 0.45rem 0.6rem;
 }

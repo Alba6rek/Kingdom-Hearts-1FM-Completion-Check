@@ -869,3 +869,31 @@ The following two documents contain full examples:
 
 - `02-ADDING-A-COMPLETION.md`
 - `03-ADDING-A-NEW-VARIABLE.md`
+
+---
+
+# 10. Current architecture rule for independent mapped flags
+
+For any feature where each physical location/action has its own bit, keep the binary mapping in `kh1-database.js` and decode it generically.
+
+The Trinity implementation now follows this pattern:
+
+```text
+KH1_TRINITY_MARK_STATES
+        |
+        v
+DecodeMappedBitStates()
+        |
+        v
+slot.completion.trinity.markStates
+        |
+        +--> KH1CheckCompletion.js
+        |
+        +--> index.js
+```
+
+`DecodeMappedBitStates()` reads absolute save offsets, so a future action/environment flag does not have to live inside the normal Trinity mark table.
+
+Display-only information such as location names, hints and guide links remains in `kh1-content.js`.
+
+For details on the optimization pass, see `28-CODE-OPTIMIZATION-AND-ARCHITECTURE.md`.

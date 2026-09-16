@@ -9,16 +9,8 @@ IMPORTANT:
 LoadSaveFile.js should only READ/PARSE the binary format.
 This file should ANALYZE the parsed data.
 
-That makes it possible later to add:
-  - completion %
-  - missing puppies
-  - missing Reports
-  - missing Trinity marks
-  - Journal status
-  - synthesis progress
-  - achievements
-  - hints
-without changing the binary parser.
+The parser tells us what the save contains.
+This file decides whether those decoded values satisfy completion rules.
 */
 
 import {
@@ -39,53 +31,71 @@ function CalculatePercent(
   );
 }
 
-function BuildSlotCompletion(slot) {
-  const puppyCurrent =
-    slot.completion.puppies.foundCount;
+function GetTarget(key) {
+  return (
+    KH1_COMPLETION_DATABASE[key]
+      ?.target ??
+    0
+  );
+}
 
-  const reportCurrent =
-    slot.completion.reports.count;
-
-  const summonCurrent =
-    slot.completion.summons.count;
-
-  const trinityCurrent =
-    slot.completion.trinity.foundTotal;
-
-  const postcardCurrent =
-    slot.completion.postcardsMailed ?? 0;
-
-  const clamCurrent =
-    slot.completion
-      .atlanticaClams
-      ?.openedCount ?? 0;
-
-  const synthesisCurrent =
-    slot.completion
-      .synthesis
-      ?.completedCount ?? 0;
-
-  const gummiBlueprintEntries =
-    slot.completion
-      .gummiBlueprints
-      ?.entries ??
-    [];
-
-  const gummiBlueprintCurrent =
-    gummiBlueprintEntries
-      .filter(
-        entry =>
-          entry.owned
+/*
+ * Build the common current / target / percent shape used by most completion
+ * categories. `complete` is optional so existing JSON output stays compatible
+ * with categories that historically exposed only progress values.
+ */
+function BuildProgress(
+  current,
+  target,
+  includeComplete = false
+) {
+  const progress = {
+    current,
+    target,
+    percent:
+      CalculatePercent(
+        current,
+        target
       )
-      .length;
+  };
 
-  const missingGummiBlueprints =
-    gummiBlueprintEntries
-      .filter(
-        entry =>
-          !entry.owned
-      );
+  if (includeComplete) {
+    progress.complete =
+      current >= target;
+  }
 
+  return progress;
+}
+
+function FlattenJournalEnemies(slot) {
+  return (
+    slot.completion
+      .enemyDefeatCounters
+      .journalGroups ??
+    []
+  ).flat();
+}
+
+function GetMappedTrinityStates(slot) {
+  return Object.values(
+    slot.completion
+      .trinity
+      ?.markStates ??
+    {}
+  ).filter(
+    entry =>
+      Number.isInteger(
+        entry?.offset
+      ) &&
+      Number.isInteger(
+        entry?.mask
+      ) &&
+      typeof entry?.found ===
+        "boolean"
+  );
+}
+
+function BuildSlotCompletion(slot) {
   const journalCharacterEntries =
     Object.values(
       slot.completion
@@ -94,48 +104,25 @@ function BuildSlotCompletion(slot) {
       {}
     );
 
-  const journalCharacterCurrent =
-    journalCharacterEntries
-      .filter(
-        entry =>
-          entry.found === true
-      )
-      .length;
-
   const missingJournalCharacters =
-    journalCharacterEntries
-      .filter(
-        entry =>
-          entry.found !== true
-      );
+    journalCharacterEntries.filter(
+      entry =>
+        entry.found !== true
+    );
+
+  const journalCharacterCurrent =
+    journalCharacterEntries.length -
+    missingJournalCharacters.length;
 
   /*
-   * Heartless completion is NOT based on the total number of kills.
-   *
-   * Each of the 46 Journal enemies contributes exactly one completion entry:
-   *
-   *   defeated === 0  -> incomplete
-   *   defeated >= 1   -> complete
-   *
-   * Example:
-   *   Shadow = 1051 kills -> still counts as 1 completed Journal enemy.
-   *   Soldier = 169 kills -> still counts as 1 completed Journal enemy.
+   * Heartless completion is one completion point per Journal enemy, not the
+   * total number of kills. A counter greater than zero means that enemy has
+   * been encountered/defeated for completion purposes.
    */
   const journalEnemies =
-    slot.completion
-      .enemyDefeatCounters
-      .journalGroups
-      .reduce(
-        (allEnemies, group) =>
-          allEnemies.concat(group),
-        []
-      );
-
-  const heartlessCurrent =
-    journalEnemies.filter(
-      enemy =>
-        enemy.defeated > 0
-    ).length;
+    FlattenJournalEnemies(
+      slot
+    );
 
   const missingHeartless =
     journalEnemies.filter(
@@ -143,69 +130,138 @@ function BuildSlotCompletion(slot) {
         enemy.defeated === 0
     );
 
+  const heartlessCurrent =
+    journalEnemies.length -
+    missingHeartless.length;
+
+  /*
+   * Trinity completion is based only on independently mapped physical flags.
+   * Color counters are statistics/research data and never identify a location.
+   */
+  const trinityMappedStates =
+    GetMappedTrinityStates(
+      slot
+    );
+
+  const trinityCurrent =
+    trinityMappedStates.filter(
+      entry =>
+        entry.found === true
+    ).length;
+
+  const trinityMappedTarget =
+    trinityMappedStates.length;
+
+  const trinityTarget =
+    GetTarget(
+      "trinities"
+    );
+
+  const bossEntries =
+    Object.values(
+      slot.completion
+        .bosses
+        ?.entries ??
+      {}
+    );
+
+  const defeatedBosses =
+    bossEntries.filter(
+      entry =>
+        entry.complete
+    );
+
+  const missingMappedBosses =
+    bossEntries.filter(
+      entry =>
+        !entry.complete
+    );
+
+  const minigameEntries =
+    Object.values(
+      slot.completion
+        .minigames
+        ?.entries ??
+      {}
+    );
+
+  const completedMinigames =
+    minigameEntries.filter(
+      entry =>
+        entry.complete
+    );
+
+  const missingMappedMinigames =
+    minigameEntries.filter(
+      entry =>
+        !entry.complete
+    );
+
+  const gummiBlueprintEntries =
+    slot.completion
+      .gummiBlueprints
+      ?.entries ??
+    [];
+
+  const missingGummiBlueprints =
+    gummiBlueprintEntries.filter(
+      entry =>
+        !entry.owned
+    );
+
+  const gummiBlueprintCurrent =
+    gummiBlueprintEntries.length -
+    missingGummiBlueprints.length;
+
+  const journalCharacterTarget =
+    GetTarget(
+      "journalCharacters"
+    );
+
+  const heartlessTarget =
+    GetTarget(
+      "heartlessDefeated"
+    );
+
+  const bossesTarget =
+    GetTarget(
+      "bosses"
+    );
+
+  const minigamesTarget =
+    GetTarget(
+      "minigames"
+    );
+
   return {
     journalCharacters: {
-      current:
+      ...BuildProgress(
         journalCharacterCurrent,
-
-      target:
-        KH1_COMPLETION_DATABASE
-          .journalCharacters
-          .target,
-
-      percent:
-        CalculatePercent(
-          journalCharacterCurrent,
-          KH1_COMPLETION_DATABASE
-            .journalCharacters
-            .target
-        ),
-
-      complete:
-        journalCharacterCurrent >=
-        KH1_COMPLETION_DATABASE
-          .journalCharacters
-          .target,
+        journalCharacterTarget,
+        true
+      ),
 
       missingCount:
-        missingJournalCharacters
-          .length,
+        missingJournalCharacters.length,
 
       missing:
-        missingJournalCharacters
-          .map(
-            entry => ({
-              key:
-                entry.key,
+        missingJournalCharacters.map(
+          entry => ({
+            key:
+              entry.key,
 
-              name:
-                entry.name
-            })
-          )
+            name:
+              entry.name
+          })
+        )
     },
 
     heartlessDefeated: {
-      current:
+      ...BuildProgress(
         heartlessCurrent,
-
-      target:
-        KH1_COMPLETION_DATABASE
-          .heartlessDefeated
-          .target,
-
-      percent:
-        CalculatePercent(
-          heartlessCurrent,
-          KH1_COMPLETION_DATABASE
-            .heartlessDefeated
-            .target
-        ),
-
-      complete:
-        heartlessCurrent >=
-        KH1_COMPLETION_DATABASE
-          .heartlessDefeated
-          .target,
+        heartlessTarget,
+        true
+      ),
 
       missingCount:
         missingHeartless.length,
@@ -225,161 +281,208 @@ function BuildSlotCompletion(slot) {
         )
     },
 
-    puppies: {
-      current:
-        puppyCurrent,
+    puppies:
+      BuildProgress(
+        slot.completion
+          .puppies
+          .foundCount,
+        GetTarget("puppies")
+      ),
 
-      target:
-        KH1_COMPLETION_DATABASE.puppies.target,
+    reports:
+      BuildProgress(
+        slot.completion
+          .reports
+          .count,
+        GetTarget("ansemReports")
+      ),
 
-      percent:
-        CalculatePercent(
-          puppyCurrent,
-          KH1_COMPLETION_DATABASE.puppies.target
-        )
-    },
-
-    reports: {
-      current:
-        reportCurrent,
-
-      target:
-        KH1_COMPLETION_DATABASE.ansemReports.target,
-
-      percent:
-        CalculatePercent(
-          reportCurrent,
-          KH1_COMPLETION_DATABASE.ansemReports.target
-        )
-    },
-
-    summons: {
-      current:
-        summonCurrent,
-
-      target:
-        KH1_COMPLETION_DATABASE.summons.target,
-
-      percent:
-        CalculatePercent(
-          summonCurrent,
-          KH1_COMPLETION_DATABASE.summons.target
-        )
-    },
+    summons:
+      BuildProgress(
+        slot.completion
+          .summons
+          .count,
+        GetTarget("summons")
+      ),
 
     trinity: {
       current:
         trinityCurrent,
 
-      target:
-        KH1_COMPLETION_DATABASE.trinities.target,
+      mappedTarget:
+        trinityMappedTarget,
 
+      target:
+        trinityTarget,
+
+      unknownCount:
+        Math.max(
+          0,
+          trinityTarget -
+          trinityMappedTarget
+        ),
+
+      /*
+       * Until all 46 rows have independent mappings, the percentage describes
+       * only the mapped rows and a full completion verdict is not claimed.
+       */
       percent:
         CalculatePercent(
           trinityCurrent,
-          KH1_COMPLETION_DATABASE.trinities.target
+          trinityMappedTarget
+        ),
+
+      complete:
+        trinityMappedTarget ===
+          trinityTarget &&
+        trinityCurrent >=
+          trinityTarget
+    },
+
+    postcards:
+      BuildProgress(
+        slot.completion
+          .postcardsMailed ??
+        0,
+        GetTarget("postcards"),
+        true
+      ),
+
+    atlanticaClams:
+      BuildProgress(
+        slot.completion
+          .atlanticaClams
+          ?.openedCount ??
+        0,
+        GetTarget("atlanticaClams"),
+        true
+      ),
+
+    bosses: {
+      current:
+        defeatedBosses.length,
+
+      mappedTarget:
+        bossEntries.length,
+
+      target:
+        bossesTarget,
+
+      percent:
+        CalculatePercent(
+          defeatedBosses.length,
+          bossEntries.length
+        ),
+
+      mappingCoveragePercent:
+        CalculatePercent(
+          bossEntries.length,
+          bossesTarget
+        ),
+
+      unknownCount:
+        Math.max(
+          0,
+          bossesTarget -
+          bossEntries.length
+        ),
+
+      missingMappedCount:
+        missingMappedBosses.length,
+
+      missingMapped:
+        missingMappedBosses.map(
+          entry => ({
+            key:
+              entry.key,
+
+            name:
+              entry.name
+          })
         )
     },
 
-    postcards: {
+    minigames: {
       current:
-        postcardCurrent,
+        completedMinigames.length,
+
+      mappedTarget:
+        minigameEntries.length,
 
       target:
-        KH1_COMPLETION_DATABASE.postcards.target,
+        minigamesTarget,
 
       percent:
         CalculatePercent(
-          postcardCurrent,
-          KH1_COMPLETION_DATABASE.postcards.target
+          completedMinigames.length,
+          minigameEntries.length
         ),
 
-      complete:
-        postcardCurrent >=
-        KH1_COMPLETION_DATABASE.postcards.target
-    },
-
-    atlanticaClams: {
-      current:
-        clamCurrent,
-
-      target:
-        KH1_COMPLETION_DATABASE.atlanticaClams.target,
-
-      percent:
+      mappingCoveragePercent:
         CalculatePercent(
-          clamCurrent,
-          KH1_COMPLETION_DATABASE.atlanticaClams.target
+          minigameEntries.length,
+          minigamesTarget
         ),
 
-      complete:
-        clamCurrent >=
-        KH1_COMPLETION_DATABASE.atlanticaClams.target
+      unknownCount:
+        Math.max(
+          0,
+          minigamesTarget -
+          minigameEntries.length
+        ),
+
+      missingMappedCount:
+        missingMappedMinigames.length,
+
+      missingMapped:
+        missingMappedMinigames.map(
+          entry => ({
+            key:
+              entry.key,
+
+            name:
+              entry.name
+          })
+        )
     },
 
     gummiBlueprints: {
-      current:
+      ...BuildProgress(
         gummiBlueprintCurrent,
-
-      target:
-        KH1_COMPLETION_DATABASE
-          .gummiBlueprints
-          .target,
-
-      percent:
-        CalculatePercent(
-          gummiBlueprintCurrent,
-          KH1_COMPLETION_DATABASE
-            .gummiBlueprints
-            .target
-        ),
-
-      complete:
-        gummiBlueprintCurrent >=
-        KH1_COMPLETION_DATABASE
-          .gummiBlueprints
-          .target,
+        GetTarget("gummiBlueprints"),
+        true
+      ),
 
       missingCount:
-        missingGummiBlueprints
-          .length,
+        missingGummiBlueprints.length,
 
       missing:
-        missingGummiBlueprints
-          .map(
-            entry => ({
-              index:
-                entry.index,
+        missingGummiBlueprints.map(
+          entry => ({
+            index:
+              entry.index,
 
-              name:
-                entry.name,
+            name:
+              entry.name,
 
-              offset:
-                entry.offset,
+            offset:
+              entry.offset,
 
-              offsetHex:
-                entry.offsetHex
-            })
-          )
+            offsetHex:
+              entry.offsetHex
+          })
+        )
     },
 
-    synthesis: {
-      current:
-        synthesisCurrent,
-
-      target:
-        KH1_COMPLETION_DATABASE.synthesis.target,
-
-      percent:
-        CalculatePercent(
-          synthesisCurrent,
-          KH1_COMPLETION_DATABASE.synthesis.target
-        ),
-
-      complete:
-        synthesisCurrent >=
-        KH1_COMPLETION_DATABASE.synthesis.target
-    }
+    synthesis:
+      BuildProgress(
+        slot.completion
+          .synthesis
+          ?.completedCount ??
+        0,
+        GetTarget("synthesis"),
+        true
+      )
   };
 }
 
@@ -401,6 +504,7 @@ function KH1CheckCompletion(parsedSave) {
 
 export {
   CalculatePercent,
+  BuildProgress,
   BuildSlotCompletion,
   KH1CheckCompletion
 };

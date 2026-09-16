@@ -23,9 +23,11 @@ import {
   KH1_JOURNAL_CHARACTER_STATES,
   KH1_JOURNAL_NO_VISIBLE_CHANGE_BITS,
   KH1_JOURNAL_POST_REGION_NO_VISIBLE_BITS,
-  KH1_ACRE_WOOD_MINIGAMES,
+  KH1_MINIGAME_STATES,
+  KH1_BOSS_COMPLETION_STATES,
   KH1_KNOWN_CHESTS,
-  KH1_OLYMPUS
+  KH1_OLYMPUS,
+  KH1_TRINITY_MARK_STATES
 } from "./kh1-database.js";
 
 import KH1_DICTIONARY from "./kh1-dictionary.js";
@@ -55,23 +57,21 @@ import {
 
 function ParseArchiveEntry(
   directory,
+  directoryView,
   archiveIndex
 ) {
   const base =
     archiveIndex *
     KH1_ARCHIVE.ENTRY_LENGTH;
 
-  const view =
-    CreateDataView(directory);
-
   const created =
-    view.getInt32(
+    directoryView.getInt32(
       base + 0x40,
       true
     );
 
   const modified =
-    view.getInt32(
+    directoryView.getInt32(
       base + 0x48,
       true
     );
@@ -99,7 +99,7 @@ function ParseArchiveEntry(
       SafeUnixDate(modified),
 
     length:
-      view.getInt32(
+      directoryView.getInt32(
         base + 0x50,
         true
       )
@@ -108,15 +108,13 @@ function ParseArchiveEntry(
 
 function ParseCharacter(
   save,
-  characterIndex
+  characterIndex,
+  saveView = CreateDataView(save)
 ) {
   const base =
     KH1_SAVE.CHARACTER_START +
     characterIndex *
     KH1_SAVE.CHARACTER_SIZE;
-
-  const view =
-    CreateDataView(save);
 
   const accessoryIds =
     Array.from(
@@ -205,7 +203,7 @@ function ParseCharacter(
     },
 
     experience:
-      view.getInt32(
+      saveView.getInt32(
         base + 0x3C,
         true
       ),
@@ -611,53 +609,735 @@ function ParseKnownJournalCharacters(save) {
 
 /*
 ===============================================================================
-100 ACRE WOOD MINIGAMES
+BOSS COMPLETION
 ===============================================================================
-
-0x19D6 is a completion bitfield.
-
-Known complete save:
-    0x3E = 00111110
-
-This contains exactly five set bits, matching the five 100 Acre Wood
-minigames.
-
-Directly confirmed:
-    0x20 = Pooh's Hunny Hunt
-    0x10 = Block Tigger
 */
-function ParseAcreWoodMinigames(save) {
-  const flagsRaw =
-    save[
-      KH1_SAVE.ACRE_WOOD_MINIGAME_FLAGS
-    ];
 
+function ReportOwned(
+  save,
+  reportNumber
+) {
+  const index =
+    reportNumber - 1;
+
+  const byteIndex =
+    Math.floor(
+      index / 8
+    );
+
+  const bitIndex =
+    index % 8;
+
+  const mask =
+    0x80 >> bitIndex;
+
+  return Boolean(
+    save[
+      KH1_SAVE.ANSEM_REPORTS +
+      byteIndex
+    ] &
+    mask
+  );
+}
+
+function ParseBossCompletion(
+  save,
+  worldProgress
+) {
+  const entries =
+    {};
+
+  Object.entries(
+    KH1_BOSS_COMPLETION_STATES
+  ).forEach(
+    ([key, definition]) => {
+      let complete =
+        false;
+
+      let raw =
+        null;
+
+      let offset =
+        null;
+
+      let mask =
+        definition.mask ??
+        null;
+
+      let threshold =
+        definition.threshold ??
+        null;
+
+      if (
+        definition.type ===
+        "worldProgress"
+      ) {
+        raw =
+          worldProgress[
+            definition.index
+          ]?.raw ?? 0;
+
+        offset =
+          KH1_SAVE.WORLD_PROGRESS +
+          definition.index;
+
+        complete =
+          raw >=
+          definition.threshold;
+      } else if (
+        definition.type ===
+        "extraTraverseProgress"
+      ) {
+        offset =
+          KH1_SAVE.EXTRA_TRAVERSE_TOWN_PROGRESS;
+
+        raw =
+          save[offset];
+
+        complete =
+          raw >=
+          definition.threshold;
+      } else if (
+        definition.type ===
+        "bit"
+      ) {
+        offset =
+          definition.offset;
+
+        raw =
+          save[offset];
+
+        complete =
+          Boolean(
+            raw &
+            definition.mask
+          );
+      } else if (
+        definition.type ===
+        "byteNonZero"
+      ) {
+        offset =
+          definition.offset;
+
+        raw =
+          save[offset];
+
+        complete =
+          raw > 0;
+      } else if (
+        definition.type ===
+        "byteAtLeast"
+      ) {
+        offset =
+          definition.offset;
+
+        raw =
+          save[offset];
+
+        complete =
+          raw >=
+          definition.threshold;
+      } else if (
+        definition.type ===
+        "report"
+      ) {
+        const reportIndex =
+          definition.report - 1;
+
+        const reportByteIndex =
+          Math.floor(
+            reportIndex / 8
+          );
+
+        const reportBitIndex =
+          reportIndex % 8;
+
+        offset =
+          KH1_SAVE.ANSEM_REPORTS +
+          reportByteIndex;
+
+        mask =
+          0x80 >>
+          reportBitIndex;
+
+        raw =
+          save[offset];
+
+        complete =
+          ReportOwned(
+            save,
+            definition.report
+          );
+      } else if (
+        definition.type ===
+        "olympusCup"
+      ) {
+        offset =
+          KH1_SAVE
+            .OLYMPUS_CUP_COMPLETION_FLAGS;
+
+        raw =
+          save[offset];
+
+        complete =
+          Boolean(
+            raw &
+            definition.mask
+          );
+      }
+
+      entries[key] = {
+        key,
+
+        name:
+          KH1_DICTIONARY
+            .BOSS_NAMES[
+              key
+            ] ??
+          key,
+
+        known:
+          true,
+
+        complete,
+
+        ruleType:
+          definition.type,
+
+        evidence:
+          definition.evidence,
+
+        /*
+         * Used by the three final-battle entries. Their completion is based
+         * on KH1's maximum persistent End of the World save state, not a
+         * literal post-battle defeated flag.
+         */
+        maxSaveable:
+          Boolean(
+            definition.maxSaveable
+          ),
+
+        offset,
+
+        offsetHex:
+          offset === null
+            ? null
+            : `0x${offset
+                .toString(16)
+                .toUpperCase()}`,
+
+        raw,
+
+        rawHex:
+          raw === null
+            ? null
+            : `0x${raw
+                .toString(16)
+                .padStart(2, "0")
+                .toUpperCase()}`,
+
+        mask,
+
+        maskHex:
+          mask === null
+            ? null
+            : `0x${mask
+                .toString(16)
+                .padStart(2, "0")
+                .toUpperCase()}`,
+
+        threshold,
+
+        thresholdHex:
+          threshold === null
+            ? null
+            : `0x${threshold
+                .toString(16)
+                .padStart(2, "0")
+                .toUpperCase()}`,
+
+        report:
+          definition.report ??
+          null
+      };
+    }
+  );
+
+  return {
+    entries,
+
+    mappedCount:
+      Object.keys(
+        entries
+      ).length,
+
+    defeatedCount:
+      Object.values(
+        entries
+      ).filter(
+        entry =>
+          entry.complete
+      ).length
+  };
+}
+
+/*
+===============================================================================
+MINIGAME COMPLETION / SCORES
+===============================================================================
+*/
+
+function FormatCentiseconds(
+  centiseconds
+) {
+  const totalSeconds =
+    Math.floor(
+      centiseconds / 100
+    );
+
+  const minutes =
+    Math.floor(
+      totalSeconds / 60
+    );
+
+  const seconds =
+    totalSeconds % 60;
+
+  const remainder =
+    centiseconds % 100;
+
+  return (
+    `${minutes}:` +
+    `${seconds
+      .toString()
+      .padStart(2, "0")}.` +
+    `${remainder
+      .toString()
+      .padStart(2, "0")}`
+  );
+}
+
+/*
+ * KH1's Jungle Slider, Vine Jump and Olympus Coliseum Journal records use
+ * frame counts at 60 fps. The Journal truncates the hundredths portion rather
+ * than rounding it.
+ *
+ * Example:
+ *   1880 frames -> 00:31.33
+ *   5431 frames -> 01:30.51
+ */
+function FormatFrames60(frames) {
+  const minutes =
+    Math.floor(
+      frames / 3600
+    );
+
+  const framesInMinute =
+    frames % 3600;
+
+  const seconds =
+    Math.floor(
+      framesInMinute / 60
+    );
+
+  const remainingFrames =
+    framesInMinute % 60;
+
+  const hundredths =
+    Math.floor(
+      remainingFrames *
+      100 /
+      60
+    );
+
+  return (
+    `${minutes
+      .toString()
+      .padStart(2, "0")}:` +
+    `${seconds
+      .toString()
+      .padStart(2, "0")}.` +
+    `${hundredths
+      .toString()
+      .padStart(2, "0")}`
+  );
+}
+
+function ParseFrameRecord(
+  view,
+  offset
+) {
+  const raw =
+    view.getUint32(
+      offset,
+      true
+    );
+
+  const available =
+    raw !==
+    0xFFFFFFFF;
+
+  return {
+    offset,
+
+    offsetHex:
+      `0x${offset
+        .toString(16)
+        .toUpperCase()}`,
+
+    raw,
+
+    available,
+
+    display:
+      available
+        ? FormatFrames60(raw)
+        : null
+  };
+}
+
+function ParseMinigames(save) {
   const view =
     CreateDataView(
       save
     );
 
-  const minigames = {};
+  const entries =
+    {};
 
   Object.entries(
-    KH1_ACRE_WOOD_MINIGAMES
+    KH1_MINIGAME_STATES
   ).forEach(
     ([key, definition]) => {
+      const metadata =
+        KH1_DICTIONARY
+          .MINIGAME_SCORE_METADATA[
+            key
+          ] ??
+        {};
+
+      const subrecordNames =
+        KH1_DICTIONARY
+          .MINIGAME_SUBRECORD_NAMES[
+            key
+          ] ??
+        [];
+
+      if (
+        definition.type ===
+        "leaderboardCourses"
+      ) {
+        const courses = [];
+
+        for (
+          let courseIndex = 0;
+          courseIndex <
+          definition.courseCount;
+          courseIndex++
+        ) {
+          const courseOffset =
+            definition.baseOffset +
+            courseIndex *
+            definition.courseStride;
+
+          const records = [];
+
+          for (
+            let recordIndex = 0;
+            recordIndex <
+            definition.recordsPerCourse;
+            recordIndex++
+          ) {
+            records.push(
+              ParseFrameRecord(
+                view,
+                courseOffset +
+                recordIndex *
+                definition.recordStride
+              )
+            );
+          }
+
+          const availableRecords =
+            records.filter(
+              record =>
+                record.available
+            );
+
+          courses.push({
+            index:
+              courseIndex,
+
+            name:
+              subrecordNames[
+                courseIndex
+              ] ??
+              `Course ${courseIndex + 1}`,
+
+            offset:
+              courseOffset,
+
+            offsetHex:
+              `0x${courseOffset
+                .toString(16)
+                .toUpperCase()}`,
+
+            complete:
+              availableRecords.length > 0,
+
+            records,
+
+            availableRecords,
+
+            bestRecord:
+              availableRecords[0] ??
+              null
+          });
+        }
+
+        const completedSubcount =
+          courses.filter(
+            course =>
+              course.complete
+          ).length;
+
+        entries[key] = {
+          key,
+
+          name:
+            KH1_DICTIONARY
+              .MINIGAME_NAMES[key] ??
+            key,
+
+          known:
+            true,
+
+          complete:
+            completedSubcount >=
+            definition.courseCount,
+
+          type:
+            definition.type,
+
+          evidence:
+            definition.evidence,
+
+          baseOffset:
+            definition.baseOffset,
+
+          baseOffsetHex:
+            `0x${definition.baseOffset
+              .toString(16)
+              .toUpperCase()}`,
+
+          scoreType:
+            definition.scoreType,
+
+          scoreLabel:
+            metadata.label ??
+            "Courses",
+
+          subrecordUnit:
+            "courses",
+
+          subrecordCount:
+            definition.courseCount,
+
+          completedSubcount,
+
+          scoreDisplay:
+            `${completedSubcount}/${definition.courseCount} courses`,
+
+          subrecords:
+            courses
+        };
+
+        return;
+      }
+
+      if (
+        definition.type ===
+        "recordSet"
+      ) {
+        const records = [];
+
+        for (
+          let recordIndex = 0;
+          recordIndex <
+          definition.recordCount;
+          recordIndex++
+        ) {
+          const record =
+            ParseFrameRecord(
+              view,
+              definition.baseOffset +
+              recordIndex *
+              definition.recordStride
+            );
+
+          records.push({
+            ...record,
+
+            index:
+              recordIndex,
+
+            name:
+              subrecordNames[
+                recordIndex
+              ] ??
+              `Record ${recordIndex + 1}`,
+
+            complete:
+              record.available,
+
+            records:
+              record.available
+                ? [record]
+                : [],
+
+            availableRecords:
+              record.available
+                ? [record]
+                : [],
+
+            bestRecord:
+              record.available
+                ? record
+                : null
+          });
+        }
+
+        const completedSubcount =
+          records.filter(
+            record =>
+              record.complete
+          ).length;
+
+        entries[key] = {
+          key,
+
+          name:
+            KH1_DICTIONARY
+              .MINIGAME_NAMES[key] ??
+            key,
+
+          known:
+            true,
+
+          complete:
+            completedSubcount >=
+            definition.recordCount,
+
+          type:
+            definition.type,
+
+          evidence:
+            definition.evidence,
+
+          baseOffset:
+            definition.baseOffset,
+
+          baseOffsetHex:
+            `0x${definition.baseOffset
+              .toString(16)
+              .toUpperCase()}`,
+
+          scoreType:
+            definition.scoreType,
+
+          scoreLabel:
+            metadata.label ??
+            "Cup records",
+
+          subrecordUnit:
+            "cups",
+
+          subrecordCount:
+            definition.recordCount,
+
+          completedSubcount,
+
+          scoreDisplay:
+            `${completedSubcount}/${definition.recordCount} cups`,
+
+          subrecords:
+            records
+        };
+
+        return;
+      }
+
+      const flagRaw =
+        save[
+          definition.flagOffset
+        ];
+
       const scoreRaw =
         view.getUint32(
           definition.scoreOffset,
           true
         );
 
-      minigames[key] = {
+      const hasScore =
+        scoreRaw !==
+        0xFFFFFFFF;
+
+      let scoreDisplay =
+        null;
+
+      if (hasScore) {
+        if (
+          definition.scoreType ===
+          "centiseconds"
+        ) {
+          scoreDisplay =
+            FormatCentiseconds(
+              scoreRaw
+            );
+        } else {
+          scoreDisplay =
+            Number(
+              scoreRaw
+            ).toLocaleString();
+        }
+
+        if (
+          metadata.unit &&
+          metadata.unit !==
+          "time"
+        ) {
+          scoreDisplay +=
+            ` ${metadata.unit}`;
+        }
+      }
+
+      entries[key] = {
+        key,
+
         name:
-          definition.name,
+          KH1_DICTIONARY
+            .MINIGAME_NAMES[
+              key
+            ] ??
+          key,
+
+        known:
+          true,
+
+        complete:
+          Boolean(
+            flagRaw &
+            definition.mask
+          ),
+
+        type:
+          definition.type,
 
         completionOffset:
-          KH1_SAVE.ACRE_WOOD_MINIGAME_FLAGS,
+          definition.flagOffset,
 
         completionOffsetHex:
-          `0x${KH1_SAVE.ACRE_WOOD_MINIGAME_FLAGS
+          `0x${definition.flagOffset
             .toString(16)
             .toUpperCase()}`,
 
@@ -670,12 +1350,6 @@ function ParseAcreWoodMinigames(save) {
             .padStart(2, "0")
             .toUpperCase()}`,
 
-        complete:
-          Boolean(
-            flagsRaw &
-            definition.mask
-          ),
-
         scoreOffset:
           definition.scoreOffset,
 
@@ -684,52 +1358,93 @@ function ParseAcreWoodMinigames(save) {
             .toString(16)
             .toUpperCase()}`,
 
-        /*
-         * An untouched score field uses 0xFFFFFFFF.
-         */
         score:
-          scoreRaw ===
-          0xFFFFFFFF
-            ? null
-            : scoreRaw,
+          hasScore
+            ? scoreRaw
+            : null,
 
         scoreRaw,
 
-        confidence:
-          definition.confidence
+        scoreDisplay,
+
+        scoreLabel:
+          metadata.label ??
+          "Record",
+
+        scoreUnit:
+          metadata.unit ??
+          null,
+
+        scoreType:
+          definition.scoreType,
+
+        evidence:
+          definition.evidence
       };
     }
   );
 
   return {
-    raw:
-      flagsRaw,
+    entries,
 
-    rawHex:
-      `0x${flagsRaw
+    rawFlags:
+      save[
+        KH1_SAVE
+          .ACRE_WOOD_MINIGAME_FLAGS
+      ],
+
+    rawFlagsHex:
+      `0x${save[
+        KH1_SAVE
+          .ACRE_WOOD_MINIGAME_FLAGS
+      ]
         .toString(16)
         .padStart(2, "0")
         .toUpperCase()}`,
 
-    knownCompleteCount:
-      Object.values(
-        minigames
-      ).filter(
-        minigame =>
-          minigame.complete
+    mappedCount:
+      Object.keys(
+        entries
       ).length,
 
-    minigames,
+    completedCount:
+      Object.values(
+        entries
+      ).filter(
+        entry =>
+          entry.complete
+      ).length
+  };
+}
 
-    /*
-     * These bits are set in the known complete save but still need
-     * individual controlled tests before assigning their minigame names.
-     */
-    unresolvedMasks: [
-      0x08,
-      0x04,
-      0x02
-    ]
+/*
+ * Compatibility wrapper for older code/research JSON.
+ */
+function ParseAcreWoodMinigames(
+  save,
+  parsedMinigames = null
+) {
+  const all =
+    parsedMinigames ??
+    ParseMinigames(
+      save
+    );
+
+  return {
+    raw:
+      all.rawFlags,
+
+    rawHex:
+      all.rawFlagsHex,
+
+    knownCompleteCount:
+      all.completedCount,
+
+    minigames:
+      all.entries,
+
+    unresolvedMasks:
+      []
   };
 }
 
@@ -1540,6 +2255,16 @@ function ParseSave(
       save
     );
 
+  /*
+   * Parse minigame records once. The legacy acreWoodMinigames object is built
+   * from the same decoded result instead of reading the complete minigame
+   * block a second time.
+   */
+  const minigames =
+    ParseMinigames(
+      save
+    );
+
   return {
     slot:
       slotNumber,
@@ -1591,7 +2316,8 @@ function ParseSave(
         (value, index) =>
           ParseCharacter(
             save,
-            index
+            index,
+            view
           )
       ),
 
@@ -1619,7 +2345,8 @@ function ParseSave(
       trinity:
         DecodeTrinity(
           save,
-          KH1_SAVE
+          KH1_SAVE,
+          KH1_TRINITY_MARK_STATES
         ),
 
       enemyDefeatCounters:
@@ -1658,7 +2385,16 @@ function ParseSave(
 
       acreWoodMinigames:
         ParseAcreWoodMinigames(
-          save
+          save,
+          minigames
+        ),
+
+      minigames,
+
+      bosses:
+        ParseBossCompletion(
+          save,
+          worldProgress
         ),
 
       knownChests:
@@ -1745,6 +2481,64 @@ function ParseSave(
   };
 }
 
+/*
+ * Return the absolute payload offset for one archive-directory entry.
+ *
+ * Archive payloads use a fixed stride; they are not packed by file length.
+ */
+function GetArchivePayloadOffset(archiveIndex) {
+  return (
+    KH1_ARCHIVE.DATA_OFFSET +
+    archiveIndex *
+    KH1_ARCHIVE.ENTRY_STRIDE
+  );
+}
+
+function ReadArchiveEntryBytes(
+  fileBytes,
+  archiveEntry,
+  requestedLength = archiveEntry.length
+) {
+  const start =
+    GetArchivePayloadOffset(
+      archiveEntry.archiveIndex
+    );
+
+  const length =
+    Math.min(
+      requestedLength,
+      archiveEntry.length
+    );
+
+  const end =
+    start + length;
+
+  if (
+    start < 0 ||
+    end > fileBytes.length
+  ) {
+    throw new Error(
+      `Archive entry is outside the save container: ${archiveEntry.name || archiveEntry.archiveIndex}`
+    );
+  }
+
+  return fileBytes.slice(
+    start,
+    end
+  );
+}
+
+function GetSaveSlotNumber(archiveEntry) {
+  const match =
+    archiveEntry.name.match(
+      /-(\d+)$/
+    );
+
+  return match
+    ? Number(match[1])
+    : null;
+}
+
 async function ProcessKH1File(file) {
   const arrayBuffer =
     await file.arrayBuffer();
@@ -1777,6 +2571,15 @@ async function ProcessKH1File(file) {
       encryptedDirectory
     );
 
+  /*
+   * Create one DataView for the directory instead of rebuilding it for every
+   * one of the 200 archive records.
+   */
+  const directoryView =
+    CreateDataView(
+      decoded
+    );
+
   const entries =
     Array.from(
       {
@@ -1787,6 +2590,7 @@ async function ProcessKH1File(file) {
       (value, index) =>
         ParseArchiveEntry(
           decoded,
+          directoryView,
           index
         )
     );
@@ -1798,82 +2602,89 @@ async function ProcessKH1File(file) {
         entry.length
     );
 
-  const saveEntries =
-    nonemptyEntries.filter(
-      entry =>
-        /^BISLPS-25198-\d+$/i
-          .test(entry.name) &&
-        entry.length >=
-          KH1_ARCHIVE.SAVE_LENGTH
-    );
-
-  const slots =
-    [];
-
-  for (
-    const archiveEntry
-    of saveEntries
-  ) {
-    const match =
-      archiveEntry.name.match(
-        /-(\d+)$/
-      );
-
-    const slotNumber =
-      Number(match[1]);
-
-    const saveOffset =
-      KH1_ARCHIVE.DATA_OFFSET +
-      archiveEntry.archiveIndex *
-      KH1_ARCHIVE.ENTRY_STRIDE;
-
-    const save =
-      fileBytes.slice(
-        saveOffset,
-        saveOffset +
-        KH1_ARCHIVE.SAVE_LENGTH
-      );
-
-    const systemName =
-      `-${String(slotNumber).padStart(2, "0")}/system.bin`;
-
-    const systemEntry =
-      nonemptyEntries.find(
-        entry =>
-          entry.name === systemName
-      );
-
-    let system =
-      null;
-
-    if (systemEntry) {
-      const systemOffset =
-        KH1_ARCHIVE.DATA_OFFSET +
-        systemEntry.archiveIndex *
-        KH1_ARCHIVE.ENTRY_STRIDE;
-
-      const systemBytes =
-        fileBytes.slice(
-          systemOffset,
-          systemOffset +
-          systemEntry.length
-        );
-
-      system =
-        ParseSystem(
-          systemBytes
-        );
-    }
-
-    slots.push(
-      ParseSave(
-        save,
-        slotNumber,
-        archiveEntry,
-        system
+  /*
+   * A name lookup avoids repeatedly scanning the complete archive directory
+   * to find each slot's companion system.bin entry.
+   */
+  const entryByName =
+    new Map(
+      nonemptyEntries.map(
+        entry => [
+          entry.name,
+          entry
+        ]
       )
     );
-  }
+
+  const saveEntries =
+    nonemptyEntries
+      .filter(
+        entry =>
+          /^BISLPS-25198-\d+$/i
+            .test(entry.name) &&
+          entry.length >=
+            KH1_ARCHIVE.SAVE_LENGTH
+      )
+      .map(
+        entry => ({
+          entry,
+          slotNumber:
+            GetSaveSlotNumber(
+              entry
+            )
+        })
+      )
+      .filter(
+        item =>
+          Number.isInteger(
+            item.slotNumber
+          )
+      )
+      .sort(
+        (a, b) =>
+          a.slotNumber -
+          b.slotNumber
+      );
+
+  const slots =
+    saveEntries.map(
+      ({
+        entry: archiveEntry,
+        slotNumber
+      }) => {
+        const save =
+          ReadArchiveEntryBytes(
+            fileBytes,
+            archiveEntry,
+            KH1_ARCHIVE.SAVE_LENGTH
+          );
+
+        const systemName =
+          `-${String(slotNumber).padStart(2, "0")}/system.bin`;
+
+        const systemEntry =
+          entryByName.get(
+            systemName
+          );
+
+        const system =
+          systemEntry
+            ? ParseSystem(
+                ReadArchiveEntryBytes(
+                  fileBytes,
+                  systemEntry
+                )
+              )
+            : null;
+
+        return ParseSave(
+          save,
+          slotNumber,
+          archiveEntry,
+          system
+        );
+      }
+    );
 
   return {
     format:
@@ -1900,6 +2711,7 @@ async function ProcessKH1File(file) {
     slots
   };
 }
+
 
 /*
  * Main <input type="file"> function.

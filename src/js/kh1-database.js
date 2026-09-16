@@ -86,11 +86,48 @@ const KH1_SAVE = Object.freeze({
   ACRE_WOOD_PAGES_LENGTH: 5,
 
   /*
+   * Jiminy's Journal minigame records.
+   *
+   * Jungle Slider and Vine Jump store leaderboard times as unsigned
+   * little-endian frame counts at 60 fps. Unused entries are 0xFFFFFFFF.
+   *
+   * Olympus Coliseum stores one time-trial record for each cup using the
+   * same 60 fps frame-count format.
+   */
+  JUNGLE_SLIDER_RECORDS: 0x1728,
+  JUNGLE_SLIDER_COURSE_COUNT: 5,
+  JUNGLE_SLIDER_RECORDS_PER_COURSE: 5,
+  JUNGLE_SLIDER_COURSE_STRIDE: 0x14,
+
+  VINE_JUMP_RECORDS: 0x178C,
+  VINE_JUMP_COURSE_COUNT: 4,
+  VINE_JUMP_RECORDS_PER_COURSE: 5,
+  VINE_JUMP_COURSE_STRIDE: 0x14,
+
+  OLYMPUS_MINIGAME_RECORDS: 0x0F4C,
+  OLYMPUS_MINIGAME_RECORD_COUNT: 4,
+
+  /*
    * 100 Acre Wood minigame data discovered through controlled saves.
    */
   ACRE_WOOD_MINIGAME_FLAGS: 0x19D6,
+
+  /*
+   * Hundred Acre Wood personal-record structures.
+   *
+   * The first two were directly confirmed through controlled saves.
+   * The remaining three follow the exact +0x14 record spacing and produce
+   * plausible values in the known complete save:
+   *
+   *   0x1804 = 45 yards
+   *   0x1818 = 2563 centiseconds = 25.63 seconds
+   *   0x182C = 20974 centiseconds = 3:29.74
+   */
   HUNNY_HUNT_SCORE: 0x17DC,
   BLOCK_TIGGER_SCORE: 0x17F0,
+  POOH_SWING_SCORE: 0x1804,
+  TIGGER_GIANT_POT_SCORE: 0x1818,
+  POOH_MUDDY_PATH_SCORE: 0x182C,
 
   WORLD_PROGRESS: 0x1504,
   WORLD_PROGRESS_LENGTH: 12,
@@ -102,6 +139,45 @@ const KH1_SAVE = Object.freeze({
   PHIL_TRAINING_FLAG: 0x0F05,
 
   EXTRA_TRAVERSE_TOWN_PROGRESS: 0x1512,
+
+  /*
+   * Darkside / Awakening completion.
+   *
+   * Controlled test supplied by the user:
+   *   Slot 1 = immediately before Darkside -> 0x00
+   *   Slot 2 = immediately after Darkside  -> 0x01
+   *
+   * The value also remains 0x01 in later populated saves.
+   * This is used as the persistent "Darkside defeated" story-completion flag.
+   */
+  DARKSIDE_COMPLETION: 0x1514,
+
+  /*
+   * Controlled boss-completion flags / states.
+   *
+   * Cave of Wonders Guardian:
+   *   Slot 15 before -> 0x1D71 = 0x00
+   *   Slot 16 after  -> 0x1D71 = 0x40
+   *
+   * Lock, Shock, and Barrel:
+   *   Slot 22 before -> 0x1DD3 = 0x00
+   *   Slot 23 after  -> 0x1DD3 = 0x80
+   *
+   * Shark:
+   *   Slot 19 before -> 0x20E1 = 0x0E
+   *   Slot 20 after  -> 0x20E1 = 0x10
+   *
+   * The 100% Slot 1 save has 0x20E1 = 0x11, so bit 0x10 remains set.
+   */
+  CAVE_GUARDIAN_COMPLETION: 0x1D71,
+  LOCK_SHOCK_BARREL_COMPLETION: 0x1DD3,
+  SHARK_COMPLETION_STATE: 0x20E1,
+
+  /*
+   * Phantom's persistent completion byte.
+   * Complete when >= 0x96.
+   */
+  PHANTOM_COMPLETION: 0x150D,
 
   RED_ARMOR_JOURNAL: 0x16F9,
 
@@ -183,6 +259,17 @@ const KH1_SAVE = Object.freeze({
 
   TRINITY_COUNTERS: 0x1C66,
   TRINITY_COUNTERS_LENGTH: 6,
+
+  /*
+   * Persistent per-mark Trinity state table discovered from the user's
+   * natural save progression.
+   *
+   * In partial saves, the number of set bits here exactly equals the total
+   * Trinity counters. The completed Slot 1 has 45 set bits while its color
+   * counters total 46, indicating one exceptional/story-tracked Trinity.
+   */
+  TRINITY_MARK_FLAGS: 0x1C6C,
+  TRINITY_MARK_FLAGS_LENGTH: 0x14,
 
   POSTCARDS_MAILED: 0x1CBF,
   POSTCARDS_TOTAL: 10,
@@ -655,35 +742,448 @@ const KH1_JOURNAL_POST_REGION_NO_VISIBLE_BITS = Object.freeze([
 
 /*
 ===============================================================================
-CONFIRMED 100 ACRE WOOD MINIGAME FLAGS
+MINIGAME COMPLETION / SCORE LOCATIONS
 ===============================================================================
 
-The complete save contains 0x3E at 0x19D6:
-    0011 1110
+The database contains binary rules only. Human-readable names and score units
+live in kh1-dictionary.js.
 
-That is exactly five set bits, matching the five 100 Acre Wood minigames.
-
-Directly confirmed:
-    0x20 = Pooh's Hunny Hunt
-    0x10 = Block Tigger
-
-The remaining 0x08 / 0x04 / 0x02 bits are preserved but are not assigned
-to specific minigames until individually tested.
+Hundred Acre Wood:
+- 0x20 Hunny Hunt and 0x10 Block Tigger are directly confirmed.
+- 0x08 / 0x04 / 0x02 follow the exact in-game page order and the complete
+  save contains 0x3E, exactly five set bits. The three later assignments are
+  classified as strong until separately controlled.
 */
-const KH1_ACRE_WOOD_MINIGAMES = Object.freeze({
-  poohHunnyHunt: {
-    name: "Pooh's Hunny Hunt",
+const KH1_MINIGAME_STATES = Object.freeze({
+  jungleSlider: Object.freeze({
+    type: "leaderboardCourses",
+    baseOffset: 0x1728,
+    courseCount: 5,
+    recordsPerCourse: 5,
+    courseStride: 0x14,
+    recordStride: 4,
+    scoreType: "frames60",
+    evidence: "confirmed"
+  }),
+
+  vineJump: Object.freeze({
+    type: "leaderboardCourses",
+    baseOffset: 0x178C,
+    courseCount: 4,
+    recordsPerCourse: 5,
+    courseStride: 0x14,
+    recordStride: 4,
+    scoreType: "frames60",
+    evidence: "confirmed"
+  }),
+
+  poohHunnyHunt: Object.freeze({
+    type: "bitScore",
+    flagOffset: 0x19D6,
     mask: 0x20,
     scoreOffset: 0x17DC,
-    confidence: "confirmed"
-  },
+    scoreType: "integer",
+    evidence: "confirmed"
+  }),
 
-  blockTigger: {
-    name: "Block Tigger",
+  blockTigger: Object.freeze({
+    type: "bitScore",
+    flagOffset: 0x19D6,
     mask: 0x10,
     scoreOffset: 0x17F0,
-    confidence: "confirmed"
-  }
+    scoreType: "integer",
+    evidence: "confirmed"
+  }),
+
+  poohSwing: Object.freeze({
+    type: "bitScore",
+    flagOffset: 0x19D6,
+    mask: 0x08,
+    scoreOffset: 0x1804,
+    scoreType: "integer",
+    evidence: "strong"
+  }),
+
+  tiggerGiantPot: Object.freeze({
+    type: "bitScore",
+    flagOffset: 0x19D6,
+    mask: 0x04,
+    scoreOffset: 0x1818,
+    scoreType: "centiseconds",
+    evidence: "strong"
+  }),
+
+  poohMuddyPath: Object.freeze({
+    type: "bitScore",
+    flagOffset: 0x19D6,
+    mask: 0x02,
+    scoreOffset: 0x182C,
+    scoreType: "centiseconds",
+    evidence: "strong"
+  }),
+
+  olympusColiseum: Object.freeze({
+    type: "recordSet",
+    baseOffset: 0x0F4C,
+    recordCount: 4,
+    recordStride: 4,
+    scoreType: "frames60",
+    evidence: "confirmed"
+  })
+});
+
+/*
+===============================================================================
+BOSS COMPLETION LOCATIONS / RULES
+===============================================================================
+
+This contains only technical completion rules.
+
+worldProgress index order:
+  0 Traverse Town
+  1 Deep Jungle
+  2 Olympus Coliseum
+  3 Wonderland
+  4 Agrabah
+  5 Monstro
+  6 Atlantica
+  7 unused
+  8 Halloween Town
+  9 Neverland
+ 10 Hollow Bastion
+ 11 End of the World
+
+Some rules are direct flags/reports. Others use the persistent story-progress
+threshold reached immediately after a boss battle.
+
+Bosses intentionally omitted from this map still require controlled research
+or cannot be persistently represented by a normal post-battle save.
+*/
+const KH1_BOSS_COMPLETION_STATES = Object.freeze({
+  darkside: Object.freeze({
+    type: "byteNonZero",
+    offset: 0x1514,
+    evidence: "confirmed"
+  }),
+
+  guardArmor: Object.freeze({
+    type: "worldProgress",
+    index: 0,
+    threshold: 0x31,
+    evidence: "strong"
+  }),
+
+  oppositeArmor: Object.freeze({
+    type: "extraTraverseProgress",
+    threshold: 0x14,
+    evidence: "strong"
+  }),
+
+  redArmor: Object.freeze({
+    type: "bit",
+    offset: 0x16F9,
+    mask: 0x02,
+    evidence: "confirmed"
+  }),
+
+  trickmaster: Object.freeze({
+    type: "worldProgress",
+    index: 3,
+    threshold: 0x2E,
+    evidence: "strong"
+  }),
+
+  /*
+   * Project completion rule requested by the user:
+   * count Cloud as defeated once the Preliminary Tournament is finished.
+   *
+   * Olympus progress >= 0x22 was directly confirmed by the controlled
+   * Slot 55 -> 56 Preliminary Tournament test.
+   */
+  cloud: Object.freeze({
+    type: "worldProgress",
+    index: 2,
+    threshold: 0x22,
+    evidence: "confirmed"
+  }),
+
+  cerberus: Object.freeze({
+    type: "worldProgress",
+    index: 2,
+    threshold: 0x28,
+    evidence: "confirmed"
+  }),
+
+  hercules: Object.freeze({
+    type: "olympusCup",
+    mask: 0x04,
+    evidence: "confirmed"
+  }),
+
+  hades: Object.freeze({
+    type: "report",
+    report: 8,
+    evidence: "direct defeat reward"
+  }),
+
+  rockTitan: Object.freeze({
+    type: "olympusCup",
+    mask: 0x08,
+    evidence: "strong"
+  }),
+
+  iceTitan: Object.freeze({
+    type: "byteNonZero",
+    offset: 0x0F69,
+    evidence: "confirmed"
+  }),
+
+  sephiroth: Object.freeze({
+    type: "byteNonZero",
+    offset: 0x0F6A,
+    evidence: "confirmed"
+  }),
+
+  sabor: Object.freeze({
+    type: "worldProgress",
+    index: 1,
+    threshold: 0x42,
+    evidence: "strong"
+  }),
+
+  clayton: Object.freeze({
+    type: "worldProgress",
+    index: 1,
+    threshold: 0x56,
+    evidence: "strong"
+  }),
+
+  stealthSneak: Object.freeze({
+    type: "worldProgress",
+    index: 1,
+    threshold: 0x56,
+    evidence: "battle-clear proxy"
+  }),
+
+  potCentipede: Object.freeze({
+    type: "worldProgress",
+    index: 4,
+    threshold: 0x35,
+    evidence: "strong"
+  }),
+
+  /*
+   * Controlled pair:
+   *   Slot 15 before: 0x1D71 = 0x00, Agrabah progress 0x35
+   *   Slot 16 after:  0x1D71 = 0x40, Agrabah progress 0x3F
+   *
+   * The direct bit is used rather than only relying on story progress.
+   */
+  caveGuardian: Object.freeze({
+    type: "bit",
+    offset: 0x1D71,
+    mask: 0x40,
+    evidence: "confirmed"
+  }),
+
+  jafar: Object.freeze({
+    type: "worldProgress",
+    index: 4,
+    threshold: 0x49,
+    evidence: "strong"
+  }),
+
+  genieJafar: Object.freeze({
+    type: "worldProgress",
+    index: 4,
+    threshold: 0x5A,
+    evidence: "strong"
+  }),
+
+  kurtZisa: Object.freeze({
+    type: "report",
+    report: 11,
+    evidence: "direct defeat reward"
+  }),
+
+  parasiteCage1: Object.freeze({
+    type: "worldProgress",
+    index: 5,
+    threshold: 0x2E,
+    evidence: "strong"
+  }),
+
+  parasiteCage2: Object.freeze({
+    type: "worldProgress",
+    index: 5,
+    threshold: 0x46,
+    evidence: "strong"
+  }),
+
+  /*
+   * Controlled pair:
+   *   Slot 19 before: 0x20E1 = 0x0E
+   *   Slot 20 after:  0x20E1 = 0x10
+   *
+   * Atlantica story progress stays 0x32 across this battle, so the normal
+   * world-progress byte cannot detect the immediate Shark defeat.
+   *
+   * The controlled transition sets bit 0x10, and the user's known 100%
+   * Slot 1 later contains 0x11 at this byte, preserving that bit.
+   */
+  shark: Object.freeze({
+    type: "bit",
+    offset: 0x20E1,
+    mask: 0x10,
+    evidence: "confirmed"
+  }),
+
+  ursula1: Object.freeze({
+    type: "worldProgress",
+    index: 6,
+    threshold: 0x53,
+    evidence: "strong"
+  }),
+
+  ursulaFinal: Object.freeze({
+    type: "worldProgress",
+    index: 6,
+    threshold: 0x5D,
+    evidence: "strong"
+  }),
+
+  /*
+   * Controlled pair:
+   *   Slot 22 before: 0x1DD3 = 0x00, Halloween progress 0x46
+   *   Slot 23 after:  0x1DD3 = 0x80, Halloween progress 0x53
+   *
+   * The direct event bit is used for the defeated state.
+   */
+  lockShockBarrel: Object.freeze({
+    type: "bit",
+    offset: 0x1DD3,
+    mask: 0x80,
+    evidence: "confirmed"
+  }),
+
+  oogieBoogie: Object.freeze({
+    type: "worldProgress",
+    index: 8,
+    threshold: 0x62,
+    evidence: "strong"
+  }),
+
+  oogieManor: Object.freeze({
+    type: "worldProgress",
+    index: 8,
+    threshold: 0x6A,
+    evidence: "strong"
+  }),
+
+  antiSora: Object.freeze({
+    type: "worldProgress",
+    index: 9,
+    threshold: 0x35,
+    evidence: "strong"
+  }),
+
+  captainHook: Object.freeze({
+    type: "report",
+    report: 9,
+    evidence: "direct defeat reward"
+  }),
+
+  phantom: Object.freeze({
+    type: "byteAtLeast",
+    offset: 0x150D,
+    threshold: 0x96,
+    evidence: "confirmed external save mapping"
+  }),
+
+  riku: Object.freeze({
+    type: "worldProgress",
+    index: 10,
+    threshold: 0x32,
+    evidence: "strong"
+  }),
+
+  maleficent: Object.freeze({
+    type: "worldProgress",
+    index: 10,
+    threshold: 0x5A,
+    evidence: "strong"
+  }),
+
+  dragonMaleficent: Object.freeze({
+    type: "worldProgress",
+    index: 10,
+    threshold: 0x6E,
+    evidence: "strong"
+  }),
+
+  rikuAnsem: Object.freeze({
+    type: "worldProgress",
+    index: 10,
+    threshold: 0x82,
+    evidence: "strong"
+  }),
+
+  behemoth: Object.freeze({
+    type: "worldProgress",
+    index: 10,
+    threshold: 0xB9,
+    evidence: "strong"
+  }),
+
+  unknown: Object.freeze({
+    type: "report",
+    report: 13,
+    evidence: "direct defeat reward"
+  }),
+
+  chernabog: Object.freeze({
+    type: "worldProgress",
+    index: 11,
+    threshold: 0x33,
+    evidence: "strong"
+  }),
+
+  /*
+   * Final battle sequence special case.
+   *
+   * This intentionally follows the same completion policy used by the
+   * End of the World world-progress entry. KH1 does not create a normal
+   * post-final-boss clear save, so progress >= 0x33 is the maximum
+   * persistent/saveable completion state.
+   *
+   * These entries are therefore considered complete for the tracker at the
+   * maximum saveable End of the World state, while the UI clearly labels
+   * them as "Complete (max saveable progress)" rather than claiming that a
+   * post-battle defeated flag exists.
+   */
+  ansem: Object.freeze({
+    type: "worldProgress",
+    index: 11,
+    threshold: 0x33,
+    evidence: "max saveable progress",
+    maxSaveable: true
+  }),
+
+  darksideFinal: Object.freeze({
+    type: "worldProgress",
+    index: 11,
+    threshold: 0x33,
+    evidence: "max saveable progress",
+    maxSaveable: true
+  }),
+
+  worldOfChaos: Object.freeze({
+    type: "worldProgress",
+    index: 11,
+    threshold: 0x33,
+    evidence: "max saveable progress",
+    maxSaveable: true
+  })
 });
 
 /*
@@ -860,6 +1360,34 @@ const KH1_RESEARCH_REGIONS = Object.freeze({
     confidence: "0x17DC Hunny Hunt and 0x17F0 Block Tigger directly confirmed"
   },
 
+  darksideCompletion: {
+    offset: 0x1514,
+    length: 1,
+    label: "Darkside / Awakening Completion",
+    confidence: "controlled before/after test: Slot 1 0x00 -> Slot 2 0x01"
+  },
+
+  caveGuardianCompletion: {
+    offset: 0x1D71,
+    length: 1,
+    label: "Cave of Wonders Guardian Completion",
+    confidence: "controlled before/after test: Slot 15 0x00 -> Slot 16 0x40"
+  },
+
+  lockShockBarrelCompletion: {
+    offset: 0x1DD3,
+    length: 1,
+    label: "Lock, Shock, and Barrel Completion",
+    confidence: "controlled before/after test: Slot 22 0x00 -> Slot 23 0x80"
+  },
+
+  sharkCompletionState: {
+    offset: 0x20E1,
+    length: 1,
+    label: "Shark Completion State",
+    confidence: "controlled before/after test: Slot 19 0x0E -> Slot 20 0x10; known 100% Slot 1 = 0x11"
+  },
+
   olympusStoryAndEventFlags: {
     offset: 0x0F00,
     length: 0x70,
@@ -913,8 +1441,68 @@ const KH1_RESEARCH_REGIONS = Object.freeze({
     offset: 0xBEBF,
     length: 48,
     label: "Gummi Ship Blueprint Ownership",
-    confidence: "48-byte ownership array confirmed; exact name order prepared for one-blueprint-per-slot PC verification"
+    confidence: "48-byte ownership array confirmed; 48-entry PC name order accepted after user one-hot spot-checks matched expected blueprints"
   }
+});
+
+
+/*
+ * Exact Trinity mark mappings from controlled Slot 99 tests.
+ *
+ * 38/46 physical Trinity locations are now confirmed against the persistent
+ * table at 0x1C6C..0x1C7F. Eight action-dependent locations remain pending
+ * because their mark visibility is also controlled by environmental/action
+ * state (tests 3, 4, 18, 19, 20, 24, 32, 34).
+ *
+ * The unresolved rows intentionally do NOT guess an offset or mask.
+ */
+const KH1_TRINITY_MARK_STATES = Object.freeze({
+  1: Object.freeze({ offset: 0x1C6C, mask: 0x40, status: "confirmed" }),
+  2: Object.freeze({ offset: 0x1C6C, mask: 0x20, status: "confirmed" }),
+  3: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
+  4: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
+  5: Object.freeze({ offset: 0x1C6E, mask: 0x20, status: "confirmed" }),
+  6: Object.freeze({ offset: 0x1C6E, mask: 0x40, status: "confirmed" }),
+  7: Object.freeze({ offset: 0x1C70, mask: 0x40, status: "confirmed" }),
+  8: Object.freeze({ offset: 0x1C70, mask: 0x20, status: "confirmed" }),
+  9: Object.freeze({ offset: 0x1C72, mask: 0x20, status: "confirmed" }),
+  10: Object.freeze({ offset: 0x1C72, mask: 0x10, status: "confirmed" }),
+  11: Object.freeze({ offset: 0x1C74, mask: 0x40, status: "confirmed" }),
+  12: Object.freeze({ offset: 0x1C74, mask: 0x04, status: "confirmed" }),
+  13: Object.freeze({ offset: 0x1C76, mask: 0x20, status: "confirmed" }),
+  14: Object.freeze({ offset: 0x1C76, mask: 0x08, status: "confirmed" }),
+  15: Object.freeze({ offset: 0x1C76, mask: 0x10, status: "confirmed" }),
+  16: Object.freeze({ offset: 0x1C7B, mask: 0x20, status: "confirmed" }),
+  17: Object.freeze({ offset: 0x1C7B, mask: 0x40, status: "confirmed" }),
+  18: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
+  19: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
+  20: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
+  21: Object.freeze({ offset: 0x1C74, mask: 0x08, status: "confirmed" }),
+  22: Object.freeze({ offset: 0x1C78, mask: 0x40, status: "confirmed" }),
+  23: Object.freeze({ offset: 0x1C7C, mask: 0x80, status: "confirmed" }),
+  24: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
+  25: Object.freeze({ offset: 0x1C6E, mask: 0x08, status: "confirmed" }),
+  26: Object.freeze({ offset: 0x1C6E, mask: 0x10, status: "confirmed" }),
+  27: Object.freeze({ offset: 0x1C70, mask: 0x08, status: "confirmed" }),
+  28: Object.freeze({ offset: 0x1C72, mask: 0x08, status: "confirmed" }),
+  29: Object.freeze({ offset: 0x1C74, mask: 0x20, status: "confirmed" }),
+  30: Object.freeze({ offset: 0x1C76, mask: 0x40, status: "confirmed" }),
+  31: Object.freeze({ offset: 0x1C7A, mask: 0x01, status: "confirmed" }),
+  32: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
+  33: Object.freeze({ offset: 0x1C6D, mask: 0x40, status: "confirmed" }),
+  34: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
+  35: Object.freeze({ offset: 0x1C74, mask: 0x10, status: "confirmed" }),
+  36: Object.freeze({ offset: 0x1C7A, mask: 0x02, status: "confirmed" }),
+  37: Object.freeze({ offset: 0x1C6C, mask: 0x80, status: "confirmed" }),
+  38: Object.freeze({ offset: 0x1C6E, mask: 0x80, status: "confirmed" }),
+  39: Object.freeze({ offset: 0x1C70, mask: 0x04, status: "confirmed" }),
+  40: Object.freeze({ offset: 0x1C72, mask: 0x80, status: "confirmed" }),
+  41: Object.freeze({ offset: 0x1C74, mask: 0x80, status: "confirmed" }),
+  42: Object.freeze({ offset: 0x1C76, mask: 0x80, status: "confirmed" }),
+  43: Object.freeze({ offset: 0x1C7F, mask: 0x80, status: "confirmed" }),
+  44: Object.freeze({ offset: 0x1C78, mask: 0x80, status: "confirmed" }),
+  45: Object.freeze({ offset: 0x1C7A, mask: 0x80, status: "confirmed" }),
+  46: Object.freeze({ offset: 0x1C7B, mask: 0x80, status: "confirmed" })
 });
 
 const KH1_COMPLETION_DATABASE = Object.freeze({
@@ -974,6 +1562,16 @@ const KH1_COMPLETION_DATABASE = Object.freeze({
   gummiBlueprints: {
     name: "Gummi Ship Blueprints",
     target: 48
+  },
+
+  bosses: {
+    name: "Bosses",
+    target: 41
+  },
+
+  minigames: {
+    name: "Journal Mini Games",
+    target: 8
   }
 });
 
@@ -985,7 +1583,9 @@ export {
   KH1_JOURNAL_CHARACTER_STATES,
   KH1_JOURNAL_NO_VISIBLE_CHANGE_BITS,
   KH1_JOURNAL_POST_REGION_NO_VISIBLE_BITS,
-  KH1_ACRE_WOOD_MINIGAMES,
+  KH1_MINIGAME_STATES,
+  KH1_BOSS_COMPLETION_STATES,
   KH1_KNOWN_CHESTS,
-  KH1_OLYMPUS
+  KH1_OLYMPUS,
+  KH1_TRINITY_MARK_STATES
 };

@@ -27,7 +27,7 @@ value means owned.
 The location was cross-checked in the user's PC saves: the 48 bytes form a
 clean 0/1 ownership table, and the first byte is the Kingdom model.
 
-## Blueprint order currently used
+## Blueprint order — accepted
 
 The checker uses the in-game menu order:
 
@@ -45,10 +45,11 @@ The checker uses the in-game menu order:
 37..47 Final Mix Mission Models
 ```
 
-Original-model ordering is strongly supported by legacy individual blueprint
-addresses. The Final Mix mission-model tail is ordered from the game/guide
-listing. A 48-slot one-blueprint-per-slot PC save was generated so the entire
-order can be verified directly in the Steam version.
+Original-model ordering is supported by legacy individual blueprint addresses,
+and a 48-slot one-blueprint-per-slot PC save was generated for direct Steam
+verification. The user spot-checked multiple generated slots and reported that
+the tested blueprint names matched the expected order. The project therefore
+accepts the complete 48-entry index-to-name mapping.
 
 ## Completion object
 
