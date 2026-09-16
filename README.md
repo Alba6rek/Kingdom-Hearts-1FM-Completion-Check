@@ -25,12 +25,16 @@ This Read me still not finalized
 - Extra information About the other Characters
 - Some Documentations.
 
+## V 0.2.0:
+- Updates URLs
+- Most Trinities are found except some.
+- Bosses are tracked
+- Minigames tracked
+
 ## in-progress:
 
 - URLs
 - Hints
 - Trinity
 - Chests
-- Boesses
-- Minigames
 - Site Design (If needed)
