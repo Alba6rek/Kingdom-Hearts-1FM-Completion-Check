@@ -23,7 +23,7 @@ const DATA_OFFSET =
   DIRECTORY_OFFSET +
   200 * 0x158;
 
-const KH1_ARCHIVE = Object.freeze({
+const KH1_ARCHIVE = {
   PNG_HEADER_LENGTH: 0x70,
 
   DIRECTORY_OFFSET,
@@ -36,9 +36,9 @@ const KH1_ARCHIVE = Object.freeze({
 
   SAVE_LENGTH: 0x16C00,
   EXPECTED_FILE_SIZE: 0x11EB09D
-});
+};
 
-const KH1_SAVE = Object.freeze({
+const KH1_SAVE = {
   CHARACTER_START: 0x0004,
   CHARACTER_SIZE: 0x74,
   CHARACTER_COUNT: 10,
@@ -248,7 +248,7 @@ const KH1_SAVE = Object.freeze({
    *   0x01 = Phil Cup
    *   0x02 = Pegasus Cup
    *   0x04 = Hercules Cup
-   *   0x08 = Hades Cup (pattern + complete-save observation)
+   *   0x08 = Hades Cup (confirmed)
    */
   OLYMPUS_CUP_COMPLETION_FLAGS: 0x16D0,
 
@@ -325,7 +325,7 @@ const KH1_SAVE = Object.freeze({
   MUNNY: 0x1641C,
 
   DIFFICULTY: 0x1642C
-});
+};
 
 /*
  * This is the beginning of the future completion-check database.
@@ -392,351 +392,352 @@ World grouping, hints, order, and URLs belong in kh1-content.js.
 A character may have more than one persistent state. Completion is true when
 ANY confirmed state for that character is active.
 */
-const KH1_JOURNAL_CHARACTER_STATES = Object.freeze({
-  "kairi": Object.freeze([
-    Object.freeze({ offset: 0x16E3, mask: 0x01 }),
-  ]),
-  "riku": Object.freeze([
-    Object.freeze({ offset: 0x16E3, mask: 0x04 }),
-  ]),
-  "sora": Object.freeze([
-    Object.freeze({ offset: 0x16E3, mask: 0x40 }),
-  ]),
-  "pluto": Object.freeze([
-    Object.freeze({ offset: 0x16E4, mask: 0x01 }),
-  ]),
-  "daisy-duck": Object.freeze([
-    Object.freeze({ offset: 0x16E4, mask: 0x02 }),
-  ]),
-  "minnie-mouse": Object.freeze([
-    Object.freeze({ offset: 0x16E4, mask: 0x04 }),
-  ]),
-  "goofy": Object.freeze([
-    Object.freeze({ offset: 0x16E4, mask: 0x08 }),
-  ]),
-  "donald-duck": Object.freeze([
-    Object.freeze({ offset: 0x16E4, mask: 0x20 }),
-  ]),
-  "mickey-mouse": Object.freeze([
-    Object.freeze({ offset: 0x16E4, mask: 0x80 }),
-  ]),
-  "pongo": Object.freeze([
-    Object.freeze({ offset: 0x16E5, mask: 0x01 }),
-  ]),
-  "fairy-godmother": Object.freeze([
-    Object.freeze({ offset: 0x16E5, mask: 0x02 }),
-  ]),
-  "merlin": Object.freeze([
-    Object.freeze({ offset: 0x16E5, mask: 0x04 }),
-  ]),
-  "louie": Object.freeze([
-    Object.freeze({ offset: 0x16E5, mask: 0x08 }),
-  ]),
-  "dewey": Object.freeze([
-    Object.freeze({ offset: 0x16E5, mask: 0x10 }),
-  ]),
-  "huey": Object.freeze([
-    Object.freeze({ offset: 0x16E5, mask: 0x20 }),
-  ]),
-  "dale": Object.freeze([
-    Object.freeze({ offset: 0x16E5, mask: 0x40 }),
-  ]),
-  "chip": Object.freeze([
-    Object.freeze({ offset: 0x16E5, mask: 0x80 }),
-  ]),
-  "ice-titan": Object.freeze([
-    Object.freeze({ offset: 0x16F7, mask: 0x02 }),
-  ]),
-  "sephiroth": Object.freeze([
-    Object.freeze({ offset: 0x16F7, mask: 0x04 }),
-  ]),
-  "unknown": Object.freeze([
-    Object.freeze({ offset: 0x16F8, mask: 0x40 }),
-  ]),
-  "perdita": Object.freeze([
-    Object.freeze({ globalBit: 7, offset: 0x16E6, mask: 0x80 }),
-  ]),
-  "99-puppies": Object.freeze([
-    Object.freeze({ globalBit: 6, offset: 0x16E6, mask: 0x40 }),
-  ]),
-  "brooms": Object.freeze([
-    Object.freeze({ globalBit: 5, offset: 0x16E6, mask: 0x20 }),
-  ]),
-  "leon": Object.freeze([
-    Object.freeze({ globalBit: 4, offset: 0x16E6, mask: 0x10 }),
-  ]),
-  "yuffie": Object.freeze([
-    Object.freeze({ globalBit: 3, offset: 0x16E6, mask: 0x08 }),
-  ]),
-  "aerith": Object.freeze([
-    Object.freeze({ globalBit: 2, offset: 0x16E6, mask: 0x04 }),
-  ]),
-  "cid": Object.freeze([
-    Object.freeze({ globalBit: 0, offset: 0x16E6, mask: 0x01 }),
-  ]),
-  "tidus": Object.freeze([
-    Object.freeze({ globalBit: 15, offset: 0x16E7, mask: 0x80 }),
-  ]),
-  "selphie": Object.freeze([
-    Object.freeze({ globalBit: 14, offset: 0x16E7, mask: 0x40 }),
-  ]),
-  "wakka": Object.freeze([
-    Object.freeze({ globalBit: 13, offset: 0x16E7, mask: 0x20 }),
-  ]),
-  "moogles": Object.freeze([
-    Object.freeze({ globalBit: 12, offset: 0x16E7, mask: 0x10 }),
-  ]),
-  "snow-white": Object.freeze([
-    Object.freeze({ globalBit: 10, offset: 0x16E7, mask: 0x04 }),
-  ]),
-  "cinderella": Object.freeze([
-    Object.freeze({ globalBit: 9, offset: 0x16E7, mask: 0x02 }),
-  ]),
-  "aurora": Object.freeze([
-    Object.freeze({ globalBit: 8, offset: 0x16E7, mask: 0x01 }),
-  ]),
-  "belle": Object.freeze([
-    Object.freeze({ globalBit: 23, offset: 0x16E8, mask: 0x80 }),
-  ]),
-  "beast": Object.freeze([
-    Object.freeze({ globalBit: 22, offset: 0x16E8, mask: 0x40 }),
-  ]),
-  "maleficent": Object.freeze([
-    Object.freeze({ globalBit: 19, offset: 0x16E8, mask: 0x08 }),
-    Object.freeze({ globalBit: 20, offset: 0x16E8, mask: 0x10 }),
-    Object.freeze({ globalBit: 21, offset: 0x16E8, mask: 0x20 }),
-  ]),
-  "dragon": Object.freeze([
-    Object.freeze({ globalBit: 18, offset: 0x16E8, mask: 0x04 }),
-  ]),
-  "ansem": Object.freeze([
-    Object.freeze({ globalBit: 11, offset: 0x16E7, mask: 0x08 }),
-    Object.freeze({ globalBit: 17, offset: 0x16E8, mask: 0x02 }),
-  ]),
-  "cloud": Object.freeze([
-    Object.freeze({ globalBit: 1, offset: 0x16E6, mask: 0x02 }),
-  ]),
-  "mushu": Object.freeze([
-    Object.freeze({ globalBit: 30, offset: 0x16E9, mask: 0x40 }),
-  ]),
-  "simba": Object.freeze([
-    Object.freeze({ globalBit: 29, offset: 0x16E9, mask: 0x20 }),
-  ]),
-  "alice": Object.freeze([
-    Object.freeze({ globalBit: 27, offset: 0x16E9, mask: 0x08 }),
-    Object.freeze({ globalBit: 28, offset: 0x16E9, mask: 0x10 }),
-  ]),
-  "queen-of-hearts": Object.freeze([
-    Object.freeze({ globalBit: 26, offset: 0x16E9, mask: 0x04 }),
-  ]),
-  "cards-hearts": Object.freeze([
-    Object.freeze({ globalBit: 25, offset: 0x16E9, mask: 0x02 }),
-  ]),
-  "cards-spades": Object.freeze([
-    Object.freeze({ globalBit: 24, offset: 0x16E9, mask: 0x01 }),
-  ]),
-  "white-rabbit": Object.freeze([
-    Object.freeze({ globalBit: 39, offset: 0x16EA, mask: 0x80 }),
-  ]),
-  "cheshire-cat": Object.freeze([
-    Object.freeze({ globalBit: 38, offset: 0x16EA, mask: 0x40 }),
-  ]),
-  "doorknob": Object.freeze([
-    Object.freeze({ globalBit: 37, offset: 0x16EA, mask: 0x20 }),
-  ]),
-  "philoctetes": Object.freeze([
-    Object.freeze({ globalBit: 35, offset: 0x16EA, mask: 0x08 }),
-  ]),
-  "tarzan": Object.freeze([
-    Object.freeze({ globalBit: 46, offset: 0x16EB, mask: 0x40 }),
-  ]),
-  "jane-porter": Object.freeze([
-    Object.freeze({ globalBit: 45, offset: 0x16EB, mask: 0x20 }),
-  ]),
-  "clayton": Object.freeze([
-    Object.freeze({ globalBit: 43, offset: 0x16EB, mask: 0x08 }),
-    Object.freeze({ globalBit: 44, offset: 0x16EB, mask: 0x10 }),
-  ]),
-  "terk": Object.freeze([
-    Object.freeze({ globalBit: 42, offset: 0x16EB, mask: 0x04 }),
-  ]),
-  "kerchak": Object.freeze([
-    Object.freeze({ globalBit: 41, offset: 0x16EB, mask: 0x02 }),
-  ]),
-  "kala": Object.freeze([
-    Object.freeze({ globalBit: 40, offset: 0x16EB, mask: 0x01 }),
-  ]),
-  "sabor": Object.freeze([
-    Object.freeze({ globalBit: 55, offset: 0x16EC, mask: 0x80 }),
-  ]),
-  "aladdin": Object.freeze([
-    Object.freeze({ globalBit: 53, offset: 0x16EC, mask: 0x20 }),
-    Object.freeze({ globalBit: 54, offset: 0x16EC, mask: 0x40 }),
-  ]),
-  "genie": Object.freeze([
-    Object.freeze({ globalBit: 51, offset: 0x16EC, mask: 0x08 }),
-    Object.freeze({ globalBit: 52, offset: 0x16EC, mask: 0x10 }),
-  ]),
-  "jasmine": Object.freeze([
-    Object.freeze({ offset: 0x16F7, mask: 0x01 }),
-    Object.freeze({ globalBit: 50, offset: 0x16EC, mask: 0x04 }),
-  ]),
-  "jafar": Object.freeze([
-    Object.freeze({ globalBit: 48, offset: 0x16EC, mask: 0x01 }),
-    Object.freeze({ globalBit: 49, offset: 0x16EC, mask: 0x02 }),
-  ]),
-  "jafar-genie": Object.freeze([
-    Object.freeze({ globalBit: 63, offset: 0x16ED, mask: 0x80 }),
-  ]),
-  "abu": Object.freeze([
-    Object.freeze({ globalBit: 62, offset: 0x16ED, mask: 0x40 }),
-  ]),
-  "iago": Object.freeze([
-    Object.freeze({ globalBit: 61, offset: 0x16ED, mask: 0x20 }),
-  ]),
-  "carpet": Object.freeze([
-    Object.freeze({ globalBit: 60, offset: 0x16ED, mask: 0x10 }),
-  ]),
-  "pinocchio": Object.freeze([
-    Object.freeze({ globalBit: 58, offset: 0x16ED, mask: 0x04 }),
-    Object.freeze({ globalBit: 59, offset: 0x16ED, mask: 0x08 }),
-  ]),
-  "geppetto": Object.freeze([
-    Object.freeze({ globalBit: 56, offset: 0x16ED, mask: 0x01 }),
-    Object.freeze({ globalBit: 57, offset: 0x16ED, mask: 0x02 }),
-  ]),
-  "jiminy-cricket": Object.freeze([
-    Object.freeze({ globalBit: 71, offset: 0x16EE, mask: 0x80 }),
-  ]),
-  "ariel": Object.freeze([
-    Object.freeze({ globalBit: 69, offset: 0x16EE, mask: 0x20 }),
-    Object.freeze({ globalBit: 70, offset: 0x16EE, mask: 0x40 }),
-  ]),
-  "king-triton": Object.freeze([
-    Object.freeze({ globalBit: 68, offset: 0x16EE, mask: 0x10 }),
-  ]),
-  "ursula": Object.freeze([
-    Object.freeze({ globalBit: 66, offset: 0x16EE, mask: 0x04 }),
-    Object.freeze({ globalBit: 67, offset: 0x16EE, mask: 0x08 }),
-  ]),
-  "sebastian": Object.freeze([
-    Object.freeze({ globalBit: 65, offset: 0x16EE, mask: 0x02 }),
-  ]),
-  "flounder": Object.freeze([
-    Object.freeze({ globalBit: 64, offset: 0x16EE, mask: 0x01 }),
-  ]),
-  "jetsam": Object.freeze([
-    Object.freeze({ globalBit: 79, offset: 0x16EF, mask: 0x80 }),
-  ]),
-  "flotsam": Object.freeze([
-    Object.freeze({ globalBit: 78, offset: 0x16EF, mask: 0x40 }),
-  ]),
-  "jack-skellington": Object.freeze([
-    Object.freeze({ globalBit: 77, offset: 0x16EF, mask: 0x20 }),
-  ]),
-  "sally": Object.freeze([
-    Object.freeze({ globalBit: 76, offset: 0x16EF, mask: 0x10 }),
-  ]),
-  "oogie-boogie": Object.freeze([
-    Object.freeze({ globalBit: 74, offset: 0x16EF, mask: 0x04 }),
-    Object.freeze({ globalBit: 75, offset: 0x16EF, mask: 0x08 }),
-  ]),
-  "dr-finkelstein": Object.freeze([
-    Object.freeze({ globalBit: 73, offset: 0x16EF, mask: 0x02 }),
-  ]),
-  "zero": Object.freeze([
-    Object.freeze({ globalBit: 72, offset: 0x16EF, mask: 0x01 }),
-  ]),
-  "lock": Object.freeze([
-    Object.freeze({ globalBit: 87, offset: 0x16F0, mask: 0x80 }),
-  ]),
-  "shock": Object.freeze([
-    Object.freeze({ globalBit: 86, offset: 0x16F0, mask: 0x40 }),
-  ]),
-  "barrel": Object.freeze([
-    Object.freeze({ globalBit: 85, offset: 0x16F0, mask: 0x20 }),
-  ]),
-  "the-mayor": Object.freeze([
-    Object.freeze({ globalBit: 84, offset: 0x16F0, mask: 0x10 }),
-  ]),
-  "peter-pan": Object.freeze([
-    Object.freeze({ globalBit: 83, offset: 0x16F0, mask: 0x08 }),
-  ]),
-  "tinker-bell": Object.freeze([
-    Object.freeze({ globalBit: 81, offset: 0x16F0, mask: 0x02 }),
-    Object.freeze({ globalBit: 82, offset: 0x16F0, mask: 0x04 }),
-  ]),
-  "wendy": Object.freeze([
-    Object.freeze({ globalBit: 80, offset: 0x16F0, mask: 0x01 }),
-  ]),
-  "captain-hook": Object.freeze([
-    Object.freeze({ globalBit: 94, offset: 0x16F1, mask: 0x40 }),
-    Object.freeze({ globalBit: 95, offset: 0x16F1, mask: 0x80 }),
-  ]),
-  "mr-smee": Object.freeze([
-    Object.freeze({ globalBit: 93, offset: 0x16F1, mask: 0x20 }),
-  ]),
-  "the-crocodile": Object.freeze([
-    Object.freeze({ globalBit: 92, offset: 0x16F1, mask: 0x10 }),
-  ]),
-  "dumbo": Object.freeze([
-    Object.freeze({ globalBit: 16, offset: 0x16E8, mask: 0x01 }),
-  ]),
-  "bambi": Object.freeze([
-    Object.freeze({ globalBit: 31, offset: 0x16E9, mask: 0x80 }),
-  ]),
-  "hercules": Object.freeze([
-    Object.freeze({ globalBit: 36, offset: 0x16EA, mask: 0x10 }),
-  ]),
-  "hades": Object.freeze([
-    Object.freeze({ globalBit: 33, offset: 0x16EA, mask: 0x02 }),
-    Object.freeze({ globalBit: 34, offset: 0x16EA, mask: 0x04 }),
-  ]),
-  "cerberus": Object.freeze([
-    Object.freeze({ globalBit: 32, offset: 0x16EA, mask: 0x01 }),
-  ]),
-  "rock-titan": Object.freeze([
-    Object.freeze({ globalBit: 47, offset: 0x16EB, mask: 0x80 }),
-  ]),
-  "winnie-the-pooh": Object.freeze([
-    Object.freeze({ globalBit: 91, offset: 0x16F1, mask: 0x08 }),
-  ]),
-  "piglet": Object.freeze([
-    Object.freeze({ globalBit: 90, offset: 0x16F1, mask: 0x04 }),
-  ]),
-  "tigger": Object.freeze([
-    Object.freeze({ globalBit: 89, offset: 0x16F1, mask: 0x02 }),
-  ]),
-  "owl": Object.freeze([
-    Object.freeze({ globalBit: 88, offset: 0x16F1, mask: 0x01 }),
-  ]),
-  "rabbit": Object.freeze([
-    Object.freeze({ globalBit: 103, offset: 0x16F2, mask: 0x80 }),
-  ]),
-  "eeyore": Object.freeze([
-    Object.freeze({ globalBit: 102, offset: 0x16F2, mask: 0x40 }),
-  ]),
-  "roo": Object.freeze([
-    Object.freeze({ globalBit: 101, offset: 0x16F2, mask: 0x20 }),
-  ]),
-});
+const KH1_JOURNAL_CHARACTER_STATES = {
+  "kairi": [
+    { offset: 0x16E3, mask: 0x01 },
+  ],
+  "riku": [
+    { offset: 0x16E3, mask: 0x04 },
+  ],
+  "sora": [
+    { offset: 0x16E3, mask: 0x40 },
+  ],
+  "pluto": [
+    { offset: 0x16E4, mask: 0x01 },
+  ],
+  "daisy-duck": [
+    { offset: 0x16E4, mask: 0x02 },
+  ],
+  "minnie-mouse": [
+    { offset: 0x16E4, mask: 0x04 },
+  ],
+  "goofy": [
+    { offset: 0x16E4, mask: 0x08 },
+  ],
+  "donald-duck": [
+    { offset: 0x16E4, mask: 0x20 },
+  ],
+  "mickey-mouse": [
+    { offset: 0x16E4, mask: 0x80 },
+  ],
+  "pongo": [
+    { offset: 0x16E5, mask: 0x01 },
+  ],
+  "fairy-godmother": [
+    { offset: 0x16E5, mask: 0x02 },
+  ],
+  "merlin": [
+    { offset: 0x16E5, mask: 0x04 },
+  ],
+  "louie": [
+    { offset: 0x16E5, mask: 0x08 },
+  ],
+  "dewey": [
+    { offset: 0x16E5, mask: 0x10 },
+  ],
+  "huey": [
+    { offset: 0x16E5, mask: 0x20 },
+  ],
+  "dale": [
+    { offset: 0x16E5, mask: 0x40 },
+  ],
+  "chip": [
+    { offset: 0x16E5, mask: 0x80 },
+  ],
+  "ice-titan": [
+    { offset: 0x16F7, mask: 0x02 },
+  ],
+  "sephiroth": [
+    { offset: 0x16F7, mask: 0x04 },
+  ],
+  "unknown": [
+    { offset: 0x16F8, mask: 0x40 },
+  ],
+  "perdita": [
+    { globalBit: 7, offset: 0x16E6, mask: 0x80 },
+  ],
+  "99-puppies": [
+    { globalBit: 6, offset: 0x16E6, mask: 0x40 },
+  ],
+  "brooms": [
+    { globalBit: 5, offset: 0x16E6, mask: 0x20 },
+  ],
+  "leon": [
+    { globalBit: 4, offset: 0x16E6, mask: 0x10 },
+  ],
+  "yuffie": [
+    { globalBit: 3, offset: 0x16E6, mask: 0x08 },
+  ],
+  "aerith": [
+    { globalBit: 2, offset: 0x16E6, mask: 0x04 },
+  ],
+  "cid": [
+    { globalBit: 0, offset: 0x16E6, mask: 0x01 },
+  ],
+  "tidus": [
+    { globalBit: 15, offset: 0x16E7, mask: 0x80 },
+  ],
+  "selphie": [
+    { globalBit: 14, offset: 0x16E7, mask: 0x40 },
+  ],
+  "wakka": [
+    { globalBit: 13, offset: 0x16E7, mask: 0x20 },
+  ],
+  "moogles": [
+    { globalBit: 12, offset: 0x16E7, mask: 0x10 },
+  ],
+  "snow-white": [
+    { globalBit: 10, offset: 0x16E7, mask: 0x04 },
+  ],
+  "cinderella": [
+    { globalBit: 9, offset: 0x16E7, mask: 0x02 },
+  ],
+  "aurora": [
+    { globalBit: 8, offset: 0x16E7, mask: 0x01 },
+  ],
+  "belle": [
+    { globalBit: 23, offset: 0x16E8, mask: 0x80 },
+  ],
+  "beast": [
+    { globalBit: 22, offset: 0x16E8, mask: 0x40 },
+  ],
+  "maleficent": [
+    { globalBit: 19, offset: 0x16E8, mask: 0x08 },
+    { globalBit: 20, offset: 0x16E8, mask: 0x10 },
+    { globalBit: 21, offset: 0x16E8, mask: 0x20 },
+  ],
+  "dragon": [
+    { globalBit: 18, offset: 0x16E8, mask: 0x04 },
+  ],
+  "ansem": [
+    { globalBit: 11, offset: 0x16E7, mask: 0x08 },
+    { globalBit: 17, offset: 0x16E8, mask: 0x02 },
+  ],
+  "cloud": [
+    { globalBit: 1, offset: 0x16E6, mask: 0x02 },
+  ],
+  "mushu": [
+    { globalBit: 30, offset: 0x16E9, mask: 0x40 },
+  ],
+  "simba": [
+    { globalBit: 29, offset: 0x16E9, mask: 0x20 },
+  ],
+  "alice": [
+    { globalBit: 27, offset: 0x16E9, mask: 0x08 },
+    { globalBit: 28, offset: 0x16E9, mask: 0x10 },
+  ],
+  "queen-of-hearts": [
+    { globalBit: 26, offset: 0x16E9, mask: 0x04 },
+  ],
+  "cards-hearts": [
+    { globalBit: 25, offset: 0x16E9, mask: 0x02 },
+  ],
+  "cards-spades": [
+    { globalBit: 24, offset: 0x16E9, mask: 0x01 },
+  ],
+  "white-rabbit": [
+    { globalBit: 39, offset: 0x16EA, mask: 0x80 },
+  ],
+  "cheshire-cat": [
+    { globalBit: 38, offset: 0x16EA, mask: 0x40 },
+  ],
+  "doorknob": [
+    { globalBit: 37, offset: 0x16EA, mask: 0x20 },
+  ],
+  "philoctetes": [
+    { globalBit: 35, offset: 0x16EA, mask: 0x08 },
+  ],
+  "tarzan": [
+    { globalBit: 46, offset: 0x16EB, mask: 0x40 },
+  ],
+  "jane-porter": [
+    { globalBit: 45, offset: 0x16EB, mask: 0x20 },
+  ],
+  "clayton": [
+    { globalBit: 43, offset: 0x16EB, mask: 0x08 },
+    { globalBit: 44, offset: 0x16EB, mask: 0x10 },
+  ],
+  "terk": [
+    { globalBit: 42, offset: 0x16EB, mask: 0x04 },
+  ],
+  "kerchak": [
+    { globalBit: 41, offset: 0x16EB, mask: 0x02 },
+  ],
+  "kala": [
+    { globalBit: 40, offset: 0x16EB, mask: 0x01 },
+  ],
+  "sabor": [
+    { globalBit: 55, offset: 0x16EC, mask: 0x80 },
+  ],
+  "aladdin": [
+    { globalBit: 53, offset: 0x16EC, mask: 0x20 },
+    { globalBit: 54, offset: 0x16EC, mask: 0x40 },
+  ],
+  "genie": [
+    { globalBit: 51, offset: 0x16EC, mask: 0x08 },
+    { globalBit: 52, offset: 0x16EC, mask: 0x10 },
+  ],
+  "jasmine": [
+    { offset: 0x16F7, mask: 0x01 },
+    { globalBit: 50, offset: 0x16EC, mask: 0x04 },
+  ],
+  "jafar": [
+    { globalBit: 48, offset: 0x16EC, mask: 0x01 },
+    { globalBit: 49, offset: 0x16EC, mask: 0x02 },
+  ],
+  "jafar-genie": [
+    { globalBit: 63, offset: 0x16ED, mask: 0x80 },
+  ],
+  "abu": [
+    { globalBit: 62, offset: 0x16ED, mask: 0x40 },
+  ],
+  "iago": [
+    { globalBit: 61, offset: 0x16ED, mask: 0x20 },
+  ],
+  "carpet": [
+    { globalBit: 60, offset: 0x16ED, mask: 0x10 },
+  ],
+  "pinocchio": [
+    { globalBit: 58, offset: 0x16ED, mask: 0x04 },
+    { globalBit: 59, offset: 0x16ED, mask: 0x08 },
+  ],
+  "geppetto": [
+    { globalBit: 56, offset: 0x16ED, mask: 0x01 },
+    { globalBit: 57, offset: 0x16ED, mask: 0x02 },
+  ],
+  "jiminy-cricket": [
+    { globalBit: 71, offset: 0x16EE, mask: 0x80 },
+  ],
+  "ariel": [
+    { globalBit: 69, offset: 0x16EE, mask: 0x20 },
+    { globalBit: 70, offset: 0x16EE, mask: 0x40 },
+  ],
+  "king-triton": [
+    { globalBit: 68, offset: 0x16EE, mask: 0x10 },
+  ],
+  "ursula": [
+    { globalBit: 66, offset: 0x16EE, mask: 0x04 },
+    { globalBit: 67, offset: 0x16EE, mask: 0x08 },
+  ],
+  "sebastian": [
+    { globalBit: 65, offset: 0x16EE, mask: 0x02 },
+  ],
+  "flounder": [
+    { globalBit: 64, offset: 0x16EE, mask: 0x01 },
+  ],
+  "jetsam": [
+    { globalBit: 79, offset: 0x16EF, mask: 0x80 },
+  ],
+  "flotsam": [
+    { globalBit: 78, offset: 0x16EF, mask: 0x40 },
+  ],
+  "jack-skellington": [
+    { globalBit: 77, offset: 0x16EF, mask: 0x20 },
+  ],
+  "sally": [
+    { globalBit: 76, offset: 0x16EF, mask: 0x10 },
+  ],
+  "oogie-boogie": [
+    { globalBit: 74, offset: 0x16EF, mask: 0x04 },
+    { globalBit: 75, offset: 0x16EF, mask: 0x08 },
+  ],
+  "dr-finkelstein": [
+    { globalBit: 73, offset: 0x16EF, mask: 0x02 },
+  ],
+  "zero": [
+    { globalBit: 72, offset: 0x16EF, mask: 0x01 },
+  ],
+  "lock": [
+    { globalBit: 87, offset: 0x16F0, mask: 0x80 },
+  ],
+  "shock": [
+    { globalBit: 86, offset: 0x16F0, mask: 0x40 },
+  ],
+  "barrel": [
+    { globalBit: 85, offset: 0x16F0, mask: 0x20 },
+  ],
+  "the-mayor": [
+    { globalBit: 84, offset: 0x16F0, mask: 0x10 },
+  ],
+  "peter-pan": [
+    { globalBit: 83, offset: 0x16F0, mask: 0x08 },
+  ],
+  "tinker-bell": [
+    { globalBit: 81, offset: 0x16F0, mask: 0x02 },
+    { globalBit: 82, offset: 0x16F0, mask: 0x04 },
+  ],
+  "wendy": [
+    { globalBit: 80, offset: 0x16F0, mask: 0x01 },
+  ],
+  "captain-hook": [
+    { globalBit: 94, offset: 0x16F1, mask: 0x40 },
+    { globalBit: 95, offset: 0x16F1, mask: 0x80 },
+  ],
+  "mr-smee": [
+    { globalBit: 93, offset: 0x16F1, mask: 0x20 },
+  ],
+  "the-crocodile": [
+    { globalBit: 92, offset: 0x16F1, mask: 0x10 },
+  ],
+  "dumbo": [
+    { globalBit: 16, offset: 0x16E8, mask: 0x01 },
+  ],
+  "bambi": [
+    { globalBit: 31, offset: 0x16E9, mask: 0x80 },
+  ],
+  "hercules": [
+    { globalBit: 36, offset: 0x16EA, mask: 0x10 },
+  ],
+  "hades": [
+    { globalBit: 33, offset: 0x16EA, mask: 0x02 },
+    { globalBit: 34, offset: 0x16EA, mask: 0x04 },
+  ],
+  "cerberus": [
+    { globalBit: 32, offset: 0x16EA, mask: 0x01 },
+  ],
+  "rock-titan": [
+    { globalBit: 47, offset: 0x16EB, mask: 0x80 },
+  ],
+  "winnie-the-pooh": [
+    { globalBit: 91, offset: 0x16F1, mask: 0x08 },
+  ],
+  "piglet": [
+    { globalBit: 90, offset: 0x16F1, mask: 0x04 },
+  ],
+  "tigger": [
+    { globalBit: 89, offset: 0x16F1, mask: 0x02 },
+  ],
+  "owl": [
+    { globalBit: 88, offset: 0x16F1, mask: 0x01 },
+  ],
+  "rabbit": [
+    { globalBit: 103, offset: 0x16F2, mask: 0x80 },
+  ],
+  "eeyore": [
+    { globalBit: 102, offset: 0x16F2, mask: 0x40 },
+  ],
+  "roo": [
+    { globalBit: 101, offset: 0x16F2, mask: 0x20 },
+  ],
+};
 
-const KH1_JOURNAL_NO_VISIBLE_CHANGE_BITS = Object.freeze([
+const KH1_JOURNAL_NO_VISIBLE_CHANGE_BITS = [
   { globalBit: 96, offset: 0x16F2, mask: 0x01 },
   { globalBit: 97, offset: 0x16F2, mask: 0x02 },
   { globalBit: 98, offset: 0x16F2, mask: 0x04 },
   { globalBit: 99, offset: 0x16F2, mask: 0x08 },
   { globalBit: 100, offset: 0x16F2, mask: 0x10 }
-]);
+];
 
 /*
- * Missing-20 post-region candidate bits that produced no visible character
- * entry in both baseline-add / isolated tests where applicable.
+ * Tested Journal-related bits that produced no visible character entry.
+ * They are intentionally ignored by Journal completion while remaining
+ * available in the raw/research data.
  */
-const KH1_JOURNAL_POST_REGION_NO_VISIBLE_BITS = Object.freeze([
+const KH1_JOURNAL_POST_REGION_NO_VISIBLE_BITS = [
   { offset: 0x16F7, mask: 0x08, label: "No visible character change" },
   { offset: 0x16F8, mask: 0x80, label: "No visible character change" }
-]);
+];
 
 
 
@@ -749,13 +750,12 @@ The database contains binary rules only. Human-readable names and score units
 live in kh1-dictionary.js.
 
 Hundred Acre Wood:
-- 0x20 Hunny Hunt and 0x10 Block Tigger are directly confirmed.
-- 0x08 / 0x04 / 0x02 follow the exact in-game page order and the complete
-  save contains 0x3E, exactly five set bits. The three later assignments are
-  classified as strong until separately controlled.
+- All five completion bits and their score fields are confirmed by testing.
+- 0x20 Hunny Hunt, 0x10 Block Tigger, 0x08 Pooh's Swing,
+  0x04 Tigger's Giant Pot, and 0x02 Pooh's Muddy Path.
 */
-const KH1_MINIGAME_STATES = Object.freeze({
-  jungleSlider: Object.freeze({
+const KH1_MINIGAME_STATES = {
+  jungleSlider: {
     type: "leaderboardCourses",
     baseOffset: 0x1728,
     courseCount: 5,
@@ -764,9 +764,9 @@ const KH1_MINIGAME_STATES = Object.freeze({
     recordStride: 4,
     scoreType: "frames60",
     evidence: "confirmed"
-  }),
+  },
 
-  vineJump: Object.freeze({
+  vineJump: {
     type: "leaderboardCourses",
     baseOffset: 0x178C,
     courseCount: 4,
@@ -775,62 +775,62 @@ const KH1_MINIGAME_STATES = Object.freeze({
     recordStride: 4,
     scoreType: "frames60",
     evidence: "confirmed"
-  }),
+  },
 
-  poohHunnyHunt: Object.freeze({
+  poohHunnyHunt: {
     type: "bitScore",
     flagOffset: 0x19D6,
     mask: 0x20,
     scoreOffset: 0x17DC,
     scoreType: "integer",
     evidence: "confirmed"
-  }),
+  },
 
-  blockTigger: Object.freeze({
+  blockTigger: {
     type: "bitScore",
     flagOffset: 0x19D6,
     mask: 0x10,
     scoreOffset: 0x17F0,
     scoreType: "integer",
     evidence: "confirmed"
-  }),
+  },
 
-  poohSwing: Object.freeze({
+  poohSwing: {
     type: "bitScore",
     flagOffset: 0x19D6,
     mask: 0x08,
     scoreOffset: 0x1804,
     scoreType: "integer",
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  tiggerGiantPot: Object.freeze({
+  tiggerGiantPot: {
     type: "bitScore",
     flagOffset: 0x19D6,
     mask: 0x04,
     scoreOffset: 0x1818,
     scoreType: "centiseconds",
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  poohMuddyPath: Object.freeze({
+  poohMuddyPath: {
     type: "bitScore",
     flagOffset: 0x19D6,
     mask: 0x02,
     scoreOffset: 0x182C,
     scoreType: "centiseconds",
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  olympusColiseum: Object.freeze({
+  olympusColiseum: {
     type: "recordSet",
     baseOffset: 0x0F4C,
     recordCount: 4,
     recordStride: 4,
     scoreType: "frames60",
     evidence: "confirmed"
-  })
-});
+  }
+};
 
 /*
 ===============================================================================
@@ -856,42 +856,43 @@ worldProgress index order:
 Some rules are direct flags/reports. Others use the persistent story-progress
 threshold reached immediately after a boss battle.
 
-Bosses intentionally omitted from this map still require controlled research
-or cannot be persistently represented by a normal post-battle save.
+All boss entries currently exposed by the tracker have an accepted completion
+rule. The final battle sequence uses the maximum saveable End of the World
+state because KH1 cannot create a normal post-final-boss save.
 */
-const KH1_BOSS_COMPLETION_STATES = Object.freeze({
-  darkside: Object.freeze({
+const KH1_BOSS_COMPLETION_STATES = {
+  darkside: {
     type: "byteNonZero",
     offset: 0x1514,
     evidence: "confirmed"
-  }),
+  },
 
-  guardArmor: Object.freeze({
+  guardArmor: {
     type: "worldProgress",
     index: 0,
     threshold: 0x31,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  oppositeArmor: Object.freeze({
+  oppositeArmor: {
     type: "extraTraverseProgress",
     threshold: 0x14,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  redArmor: Object.freeze({
+  redArmor: {
     type: "bit",
     offset: 0x16F9,
     mask: 0x02,
     evidence: "confirmed"
-  }),
+  },
 
-  trickmaster: Object.freeze({
+  trickmaster: {
     type: "worldProgress",
     index: 3,
     threshold: 0x2E,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
   /*
    * Project completion rule requested by the user:
@@ -900,77 +901,77 @@ const KH1_BOSS_COMPLETION_STATES = Object.freeze({
    * Olympus progress >= 0x22 was directly confirmed by the controlled
    * Slot 55 -> 56 Preliminary Tournament test.
    */
-  cloud: Object.freeze({
+  cloud: {
     type: "worldProgress",
     index: 2,
     threshold: 0x22,
     evidence: "confirmed"
-  }),
+  },
 
-  cerberus: Object.freeze({
+  cerberus: {
     type: "worldProgress",
     index: 2,
     threshold: 0x28,
     evidence: "confirmed"
-  }),
+  },
 
-  hercules: Object.freeze({
+  hercules: {
     type: "olympusCup",
     mask: 0x04,
     evidence: "confirmed"
-  }),
+  },
 
-  hades: Object.freeze({
+  hades: {
     type: "report",
     report: 8,
     evidence: "direct defeat reward"
-  }),
+  },
 
-  rockTitan: Object.freeze({
+  rockTitan: {
     type: "olympusCup",
     mask: 0x08,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  iceTitan: Object.freeze({
+  iceTitan: {
     type: "byteNonZero",
     offset: 0x0F69,
     evidence: "confirmed"
-  }),
+  },
 
-  sephiroth: Object.freeze({
+  sephiroth: {
     type: "byteNonZero",
     offset: 0x0F6A,
     evidence: "confirmed"
-  }),
+  },
 
-  sabor: Object.freeze({
+  sabor: {
     type: "worldProgress",
     index: 1,
     threshold: 0x42,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  clayton: Object.freeze({
+  clayton: {
     type: "worldProgress",
     index: 1,
     threshold: 0x56,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  stealthSneak: Object.freeze({
+  stealthSneak: {
     type: "worldProgress",
     index: 1,
     threshold: 0x56,
     evidence: "battle-clear proxy"
-  }),
+  },
 
-  potCentipede: Object.freeze({
+  potCentipede: {
     type: "worldProgress",
     index: 4,
     threshold: 0x35,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
   /*
    * Controlled pair:
@@ -979,46 +980,46 @@ const KH1_BOSS_COMPLETION_STATES = Object.freeze({
    *
    * The direct bit is used rather than only relying on story progress.
    */
-  caveGuardian: Object.freeze({
+  caveGuardian: {
     type: "bit",
     offset: 0x1D71,
     mask: 0x40,
     evidence: "confirmed"
-  }),
+  },
 
-  jafar: Object.freeze({
+  jafar: {
     type: "worldProgress",
     index: 4,
     threshold: 0x49,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  genieJafar: Object.freeze({
+  genieJafar: {
     type: "worldProgress",
     index: 4,
     threshold: 0x5A,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  kurtZisa: Object.freeze({
+  kurtZisa: {
     type: "report",
     report: 11,
     evidence: "direct defeat reward"
-  }),
+  },
 
-  parasiteCage1: Object.freeze({
+  parasiteCage1: {
     type: "worldProgress",
     index: 5,
     threshold: 0x2E,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  parasiteCage2: Object.freeze({
+  parasiteCage2: {
     type: "worldProgress",
     index: 5,
     threshold: 0x46,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
   /*
    * Controlled pair:
@@ -1031,26 +1032,26 @@ const KH1_BOSS_COMPLETION_STATES = Object.freeze({
    * The controlled transition sets bit 0x10, and the user's known 100%
    * Slot 1 later contains 0x11 at this byte, preserving that bit.
    */
-  shark: Object.freeze({
+  shark: {
     type: "bit",
     offset: 0x20E1,
     mask: 0x10,
     evidence: "confirmed"
-  }),
+  },
 
-  ursula1: Object.freeze({
+  ursula1: {
     type: "worldProgress",
     index: 6,
     threshold: 0x53,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  ursulaFinal: Object.freeze({
+  ursulaFinal: {
     type: "worldProgress",
     index: 6,
     threshold: 0x5D,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
   /*
    * Controlled pair:
@@ -1059,94 +1060,94 @@ const KH1_BOSS_COMPLETION_STATES = Object.freeze({
    *
    * The direct event bit is used for the defeated state.
    */
-  lockShockBarrel: Object.freeze({
+  lockShockBarrel: {
     type: "bit",
     offset: 0x1DD3,
     mask: 0x80,
     evidence: "confirmed"
-  }),
+  },
 
-  oogieBoogie: Object.freeze({
+  oogieBoogie: {
     type: "worldProgress",
     index: 8,
     threshold: 0x62,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  oogieManor: Object.freeze({
+  oogieManor: {
     type: "worldProgress",
     index: 8,
     threshold: 0x6A,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  antiSora: Object.freeze({
+  antiSora: {
     type: "worldProgress",
     index: 9,
     threshold: 0x35,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  captainHook: Object.freeze({
+  captainHook: {
     type: "report",
     report: 9,
     evidence: "direct defeat reward"
-  }),
+  },
 
-  phantom: Object.freeze({
+  phantom: {
     type: "byteAtLeast",
     offset: 0x150D,
     threshold: 0x96,
     evidence: "confirmed external save mapping"
-  }),
+  },
 
-  riku: Object.freeze({
+  riku: {
     type: "worldProgress",
     index: 10,
     threshold: 0x32,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  maleficent: Object.freeze({
+  maleficent: {
     type: "worldProgress",
     index: 10,
     threshold: 0x5A,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  dragonMaleficent: Object.freeze({
+  dragonMaleficent: {
     type: "worldProgress",
     index: 10,
     threshold: 0x6E,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  rikuAnsem: Object.freeze({
+  rikuAnsem: {
     type: "worldProgress",
     index: 10,
     threshold: 0x82,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  behemoth: Object.freeze({
+  behemoth: {
     type: "worldProgress",
     index: 10,
     threshold: 0xB9,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
-  unknown: Object.freeze({
+  unknown: {
     type: "report",
     report: 13,
     evidence: "direct defeat reward"
-  }),
+  },
 
-  chernabog: Object.freeze({
+  chernabog: {
     type: "worldProgress",
     index: 11,
     threshold: 0x33,
-    evidence: "strong"
-  }),
+    evidence: "confirmed"
+  },
 
   /*
    * Final battle sequence special case.
@@ -1161,30 +1162,30 @@ const KH1_BOSS_COMPLETION_STATES = Object.freeze({
    * them as "Complete (max saveable progress)" rather than claiming that a
    * post-battle defeated flag exists.
    */
-  ansem: Object.freeze({
+  ansem: {
     type: "worldProgress",
     index: 11,
     threshold: 0x33,
     evidence: "max saveable progress",
     maxSaveable: true
-  }),
+  },
 
-  darksideFinal: Object.freeze({
+  darksideFinal: {
     type: "worldProgress",
     index: 11,
     threshold: 0x33,
     evidence: "max saveable progress",
     maxSaveable: true
-  }),
+  },
 
-  worldOfChaos: Object.freeze({
+  worldOfChaos: {
     type: "worldProgress",
     index: 11,
     threshold: 0x33,
     evidence: "max saveable progress",
     maxSaveable: true
-  })
-});
+  }
+};
 
 /*
 ===============================================================================
@@ -1199,14 +1200,14 @@ Inside the known chest/static region, 0x0740 changed:
 
 So this chest is directly mapped to bit 0x02 at 0x0740.
 */
-const KH1_KNOWN_CHESTS = Object.freeze({
+const KH1_KNOWN_CHESTS = {
   watergleam: {
     name: "Watergleam Chest",
     offset: 0x0740,
     mask: 0x02,
     confidence: "confirmed"
   }
-});
+};
 
 
 /*
@@ -1214,7 +1215,7 @@ const KH1_KNOWN_CHESTS = Object.freeze({
 OLYMPUS COLISEUM COMPLETION MAPPINGS
 ===============================================================================
 */
-const KH1_OLYMPUS = Object.freeze({
+const KH1_OLYMPUS = {
   milestones: {
     philTraining: {
       name: "Phil's Training",
@@ -1263,12 +1264,12 @@ const KH1_OLYMPUS = Object.freeze({
       name: "Hades Cup",
       statusIndex: 3,
       completionMask: 0x08,
-      confidence: "strong pattern; complete-save state observed, controlled Hades Cup test still recommended"
+      confidence: "confirmed"
     }
   }
-});
+};
 
-const KH1_RESEARCH_REGIONS = Object.freeze({
+const KH1_RESEARCH_REGIONS = {
   collectedItems1: {
     offset: 0x04A2,
     length: 8,
@@ -1343,21 +1344,21 @@ const KH1_RESEARCH_REGIONS = Object.freeze({
     offset: 0x16E0,
     length: 0x18,
     label: "Journal Character Flag Area",
-    confidence: "partial mapping; Dumbo and five 100 Acre Wood characters directly confirmed"
+    confidence: "complete Journal character mapping; Unknown is valid and no-visible bits are intentionally ignored for completion"
   },
 
   acreWoodMinigameFlags: {
     offset: 0x19D6,
     length: 1,
     label: "100 Acre Wood Minigame Completion Flags",
-    confidence: "0x20 Hunny Hunt and 0x10 Block Tigger directly confirmed; complete save = 0x3E"
+    confidence: "all five 100 Acre Wood completion bits confirmed; complete save = 0x3E"
   },
 
   acreWoodMinigameScores: {
     offset: 0x17DC,
     length: 0x18,
     label: "100 Acre Wood Minigame Score Area",
-    confidence: "0x17DC Hunny Hunt and 0x17F0 Block Tigger directly confirmed"
+    confidence: "all five 100 Acre Wood score fields confirmed"
   },
 
   darksideCompletion: {
@@ -1399,14 +1400,14 @@ const KH1_RESEARCH_REGIONS = Object.freeze({
     offset: 0x16E6,
     length: 0x0D,
     label: "Journal Character State Area",
-    confidence: "Cloud and Cerberus directly confirmed; Hercules/Hades assignment strong"
+    confidence: "Journal character mapping completed"
   },
 
   olympusCupCompletion: {
     offset: 0x16D0,
     length: 1,
     label: "Olympus Cup Completion Bitfield",
-    confidence: "Phil/Pegasus/Hercules directly confirmed; Hades pattern supported by complete save"
+    confidence: "all four normal cup completion bits confirmed"
   },
 
   olympusCupStates: {
@@ -1443,69 +1444,75 @@ const KH1_RESEARCH_REGIONS = Object.freeze({
     label: "Gummi Ship Blueprint Ownership",
     confidence: "48-byte ownership array confirmed; 48-entry PC name order accepted after user one-hot spot-checks matched expected blueprints"
   }
-});
+};
 
 
 /*
- * Exact Trinity mark mappings from controlled Slot 99 tests.
+ * Exact per-Trinity mappings from the user's controlled save tests.
  *
- * 38/46 physical Trinity locations are now confirmed against the persistent
- * table at 0x1C6C..0x1C7F. Eight action-dependent locations remain pending
- * because their mark visibility is also controlled by environmental/action
- * state (tests 3, 4, 18, 19, 20, 24, 32, 34).
+ * All 46 physical Trinity locations are now independently mapped.
+ * 45 use the normal persistent mark table at 0x1C6C..0x1C7F.
+ * Yellow Trinity #2 (test #34, Olympus Coliseum Lobby) is the one
+ * exceptional Trinity and uses 0x1E10 bit 0x01 instead.
  *
- * The unresolved rows intentionally do NOT guess an offset or mask.
+ * This is intentionally a plain data object, matching the project's data-driven style. The decoder owns the logic; the database only
+ * describes where each Trinity state is stored.
  */
-const KH1_TRINITY_MARK_STATES = Object.freeze({
-  1: Object.freeze({ offset: 0x1C6C, mask: 0x40, status: "confirmed" }),
-  2: Object.freeze({ offset: 0x1C6C, mask: 0x20, status: "confirmed" }),
-  3: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
-  4: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
-  5: Object.freeze({ offset: 0x1C6E, mask: 0x20, status: "confirmed" }),
-  6: Object.freeze({ offset: 0x1C6E, mask: 0x40, status: "confirmed" }),
-  7: Object.freeze({ offset: 0x1C70, mask: 0x40, status: "confirmed" }),
-  8: Object.freeze({ offset: 0x1C70, mask: 0x20, status: "confirmed" }),
-  9: Object.freeze({ offset: 0x1C72, mask: 0x20, status: "confirmed" }),
-  10: Object.freeze({ offset: 0x1C72, mask: 0x10, status: "confirmed" }),
-  11: Object.freeze({ offset: 0x1C74, mask: 0x40, status: "confirmed" }),
-  12: Object.freeze({ offset: 0x1C74, mask: 0x04, status: "confirmed" }),
-  13: Object.freeze({ offset: 0x1C76, mask: 0x20, status: "confirmed" }),
-  14: Object.freeze({ offset: 0x1C76, mask: 0x08, status: "confirmed" }),
-  15: Object.freeze({ offset: 0x1C76, mask: 0x10, status: "confirmed" }),
-  16: Object.freeze({ offset: 0x1C7B, mask: 0x20, status: "confirmed" }),
-  17: Object.freeze({ offset: 0x1C7B, mask: 0x40, status: "confirmed" }),
-  18: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
-  19: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
-  20: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
-  21: Object.freeze({ offset: 0x1C74, mask: 0x08, status: "confirmed" }),
-  22: Object.freeze({ offset: 0x1C78, mask: 0x40, status: "confirmed" }),
-  23: Object.freeze({ offset: 0x1C7C, mask: 0x80, status: "confirmed" }),
-  24: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
-  25: Object.freeze({ offset: 0x1C6E, mask: 0x08, status: "confirmed" }),
-  26: Object.freeze({ offset: 0x1C6E, mask: 0x10, status: "confirmed" }),
-  27: Object.freeze({ offset: 0x1C70, mask: 0x08, status: "confirmed" }),
-  28: Object.freeze({ offset: 0x1C72, mask: 0x08, status: "confirmed" }),
-  29: Object.freeze({ offset: 0x1C74, mask: 0x20, status: "confirmed" }),
-  30: Object.freeze({ offset: 0x1C76, mask: 0x40, status: "confirmed" }),
-  31: Object.freeze({ offset: 0x1C7A, mask: 0x01, status: "confirmed" }),
-  32: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
-  33: Object.freeze({ offset: 0x1C6D, mask: 0x40, status: "confirmed" }),
-  34: Object.freeze({ offset: null, mask: null, status: "pending-action" }),
-  35: Object.freeze({ offset: 0x1C74, mask: 0x10, status: "confirmed" }),
-  36: Object.freeze({ offset: 0x1C7A, mask: 0x02, status: "confirmed" }),
-  37: Object.freeze({ offset: 0x1C6C, mask: 0x80, status: "confirmed" }),
-  38: Object.freeze({ offset: 0x1C6E, mask: 0x80, status: "confirmed" }),
-  39: Object.freeze({ offset: 0x1C70, mask: 0x04, status: "confirmed" }),
-  40: Object.freeze({ offset: 0x1C72, mask: 0x80, status: "confirmed" }),
-  41: Object.freeze({ offset: 0x1C74, mask: 0x80, status: "confirmed" }),
-  42: Object.freeze({ offset: 0x1C76, mask: 0x80, status: "confirmed" }),
-  43: Object.freeze({ offset: 0x1C7F, mask: 0x80, status: "confirmed" }),
-  44: Object.freeze({ offset: 0x1C78, mask: 0x80, status: "confirmed" }),
-  45: Object.freeze({ offset: 0x1C7A, mask: 0x80, status: "confirmed" }),
-  46: Object.freeze({ offset: 0x1C7B, mask: 0x80, status: "confirmed" })
-});
+const KH1_TRINITY_MARK_STATES = {
+  1: { offset: 0x1C6C, mask: 0x40, status: "confirmed" },
+  2: { offset: 0x1C6C, mask: 0x20, status: "confirmed" },
+  3: { offset: 0x1C6C, mask: 0x08, status: "confirmed" },
+  4: { offset: 0x1C6C, mask: 0x04, status: "confirmed" },
+  5: { offset: 0x1C6E, mask: 0x20, status: "confirmed" },
+  6: { offset: 0x1C6E, mask: 0x40, status: "confirmed" },
+  7: { offset: 0x1C70, mask: 0x40, status: "confirmed" },
+  8: { offset: 0x1C70, mask: 0x20, status: "confirmed" },
+  9: { offset: 0x1C72, mask: 0x20, status: "confirmed" },
+  10: { offset: 0x1C72, mask: 0x10, status: "confirmed" },
+  11: { offset: 0x1C74, mask: 0x40, status: "confirmed" },
+  12: { offset: 0x1C74, mask: 0x04, status: "confirmed" },
+  13: { offset: 0x1C76, mask: 0x20, status: "confirmed" },
+  14: { offset: 0x1C76, mask: 0x08, status: "confirmed" },
+  15: { offset: 0x1C76, mask: 0x10, status: "confirmed" },
+  16: { offset: 0x1C7B, mask: 0x20, status: "confirmed" },
+  17: { offset: 0x1C7B, mask: 0x40, status: "confirmed" },
+  18: { offset: 0x1C6C, mask: 0x10, status: "confirmed" },
+  19: { offset: 0x1C6D, mask: 0x80, status: "confirmed" },
+  20: { offset: 0x1C6C, mask: 0x01, status: "confirmed" },
+  21: { offset: 0x1C74, mask: 0x08, status: "confirmed" },
+  22: { offset: 0x1C78, mask: 0x40, status: "confirmed" },
+  23: { offset: 0x1C7C, mask: 0x80, status: "confirmed" },
+  24: { offset: 0x1C6C, mask: 0x02, status: "confirmed" },
+  25: { offset: 0x1C6E, mask: 0x08, status: "confirmed" },
+  26: { offset: 0x1C6E, mask: 0x10, status: "confirmed" },
+  27: { offset: 0x1C70, mask: 0x08, status: "confirmed" },
+  28: { offset: 0x1C72, mask: 0x08, status: "confirmed" },
+  29: { offset: 0x1C74, mask: 0x20, status: "confirmed" },
+  30: { offset: 0x1C76, mask: 0x40, status: "confirmed" },
+  31: { offset: 0x1C7A, mask: 0x01, status: "confirmed" },
+  32: { offset: 0x1C7C, mask: 0x40, status: "confirmed" },
+  33: { offset: 0x1C6D, mask: 0x40, status: "confirmed" },
 
-const KH1_COMPLETION_DATABASE = Object.freeze({
+  // Yellow Trinity #2 is the exceptional 46th Trinity. It does not set a
+  // bit in the normal 0x1C6C..0x1C7F mark table. Controlled Slot 85 -> 86
+  // testing shows its persistent state at 0x1E10 bit 0x01.
+  34: { offset: 0x1E10, mask: 0x01, status: "confirmed", source: "exceptional-action-state" },
+
+  35: { offset: 0x1C74, mask: 0x10, status: "confirmed" },
+  36: { offset: 0x1C7A, mask: 0x02, status: "confirmed" },
+  37: { offset: 0x1C6C, mask: 0x80, status: "confirmed" },
+  38: { offset: 0x1C6E, mask: 0x80, status: "confirmed" },
+  39: { offset: 0x1C70, mask: 0x04, status: "confirmed" },
+  40: { offset: 0x1C72, mask: 0x80, status: "confirmed" },
+  41: { offset: 0x1C74, mask: 0x80, status: "confirmed" },
+  42: { offset: 0x1C76, mask: 0x80, status: "confirmed" },
+  43: { offset: 0x1C7F, mask: 0x80, status: "confirmed" },
+  44: { offset: 0x1C78, mask: 0x80, status: "confirmed" },
+  45: { offset: 0x1C7A, mask: 0x80, status: "confirmed" },
+  46: { offset: 0x1C7B, mask: 0x80, status: "confirmed" }
+};
+
+const KH1_COMPLETION_DATABASE = {
   /*
    * The Heartless Journal has 46 normal enemy entries in the mapping.
    *
@@ -1573,7 +1580,7 @@ const KH1_COMPLETION_DATABASE = Object.freeze({
     name: "Journal Mini Games",
     target: 8
   }
-});
+};
 
 export {
   KH1_ARCHIVE,

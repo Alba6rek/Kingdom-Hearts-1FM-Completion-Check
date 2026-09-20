@@ -170,6 +170,13 @@ function Percent(
   );
 }
 
+function CompletionSummary(
+  current,
+  target
+) {
+  return `${current}/${target} · ${Percent(current, target)}%`;
+}
+
 function EntryState(
   current,
   target
@@ -900,13 +907,21 @@ function RenderWorlds(slot) {
           spoiler:
             !world.complete,
 
+          hint:
+            KH1_CONTENT
+              .WORLD_PROGRESS_META
+              ?.[world.name]
+              ?.hint ??
+            "",
+
           external:
             true,
 
           url:
             KH1_CONTENT
-              .WORLD_PROGRESS_URLS
-              ?.[world.name] ??
+              .WORLD_PROGRESS_META
+              ?.[world.name]
+              ?.url ??
             ""
         });
       }
@@ -921,8 +936,8 @@ function RenderWorlds(slot) {
         value:
           `${acreWood.convertedCount}/${acreWood.target} page flags`,
 
-        description:
-          "Tracked separately from the world-status table.",
+        /*description:
+          "Tracked separately from the world-status table.",*/
 
         state:
           EntryState(
@@ -933,13 +948,21 @@ function RenderWorlds(slot) {
         spoiler:
           !acreWoodComplete,
 
+        hint:
+          KH1_CONTENT
+            .WORLD_PROGRESS_META
+            ?.["100 Acre Wood"]
+            ?.hint ??
+          "",
+
         external:
           true,
 
         url:
           KH1_CONTENT
-            .WORLD_PROGRESS_URLS
-            ?.["100 Acre Wood"] ??
+            .WORLD_PROGRESS_META
+            ?.["100 Acre Wood"]
+            ?.url ??
           ""
       })
     );
@@ -950,7 +973,7 @@ function RenderWorlds(slot) {
     completed,
     worldTarget,
     worldRows.join(""),
-    "World-map status and story-progress bytes are kept separately. Monstro and End of the World use special story-progress completion rules.",
+    "World-map status and story-progress, note that the end of world can not be tracked as completed.",
     true
   );
 }
@@ -988,8 +1011,8 @@ function RenderEquipmentList(
               ownership
             ),
 
-          description:
-            `Item ID ${entry.itemId}`,
+          /*description:
+            `Item ID ${entry.itemId}`,*/
 
           hint:
             entry.hint,
@@ -1016,7 +1039,7 @@ function RenderEquipmentList(
     ownedCount,
     entries.length,
     body,
-    "Ownership is detected from the inventory table and currently equipped weapons.",
+    "The list of weapons. nothing more nothing less.",
     open
   );
 }
@@ -1126,7 +1149,7 @@ function RenderMagic(slot) {
     totalLevels,
     KH1_CONTENT.MAGIC.length * 3,
     body,
-    `${acquiredCount}/${KH1_CONTENT.MAGIC.length} spells obtained. Fill upgradeHints in kh1-content.js when you verify the source of each upgrade.`,
+    `${acquiredCount}/${KH1_CONTENT.MAGIC.length} spells obtained. Good job wizzard man.`,
     true
   );
 }
@@ -1227,7 +1250,7 @@ function GetTrinityDisplayState(
 ) {
   const exactState =
     markStates[
-      mark.testNumber
+      mark.index
     ] ?? null;
 
   const mapped =
@@ -1248,7 +1271,7 @@ function GetTrinityDisplayState(
       value: "Unknown",
       state: "unknown",
       description:
-        "Action-dependent independent flag is still pending. Color counters are intentionally not used as a fallback."
+        "No independent completion flag is available for this Trinity row."
     };
   }
 
@@ -1276,8 +1299,8 @@ function GetTrinityDisplayState(
       exactState.found
         ? "complete"
         : "missing",
-    description:
-      `Independent Trinity flag: ${offsetText} mask ${maskText}.`
+    /*description:
+      `Independent Trinity flag: ${offsetText} mask ${maskText}.`*/
   };
 }
 
@@ -1318,12 +1341,9 @@ function RenderTrinity(slot) {
     trinity.markStates ?? {};
 
   /*
-   * Build each physical Trinity exactly once. The same decoded rows are then
-   * used for both display and summary counts, so rendering cannot disagree
-   * with the section totals.
-   *
-   * The color counters at 0x1C66..0x1C6B stay available in parsed JSON for
-   * research, but they never determine an individual physical location.
+   * Every physical Trinity is an independent completion row.
+   * The color counters remain available in parsed JSON for research only;
+   * they never determine completion for a specific location.
    */
   const groups =
     KH1_CONTENT.TRINITY_MARKS
@@ -1351,65 +1371,104 @@ function RenderTrinity(slot) {
         group.marks
     );
 
-  const mappedCount =
-    allMarks.filter(
-      mark =>
-        mark.mapped
-    ).length;
-
-  const foundCount =
+  const completedCount =
     allMarks.filter(
       mark =>
         mark.found === true
     ).length;
 
-  const pendingCount =
-    allMarks.length -
-    mappedCount;
+  const totalCount =
+    allMarks.length;
+
+  const overallPercent =
+    Percent(
+      completedCount,
+      totalCount
+    );
 
   const body =
     groups.map(
-      group => `
-        <details
-          class="nested-list"
-          open
-        >
-          <summary>
-            ${EscapeHTML(group.color)} Trinity
-          </summary>
+      group => {
+        const groupCompleted =
+          group.marks.filter(
+            mark =>
+              mark.found === true
+          ).length;
 
-          <p class="nested-description">
-            ${
-              group.unlocked
-                ? "Each location below has its own independent status. No color-counter inference is used."
-                : "This Trinity ability is not unlocked in the selected save. Individual location flags are still shown independently below."
-            }
-          </p>
+        const groupTotal =
+          group.marks.length;
 
-          <div class="section-block">
-            ${
-              group.marks
-                .map(
-                  RenderTrinityMark
-                )
-                .join("")
-            }
-          </div>
-        </details>
-      `
+        const groupPercent =
+          Percent(
+            groupCompleted,
+            groupTotal
+          );
+
+        return `
+          <details
+            class="nested-list"
+            open
+          >
+            <summary>
+              ${EscapeHTML(group.color)} Trinity
+              <span>
+                ${CompletionSummary(groupCompleted, groupTotal)}
+              </span>
+            </summary>
+
+            <div class="progress-track">
+              <div
+                class="progress-fill ${groupCompleted >= groupTotal ? "complete" : ""}"
+                style="width:${groupPercent}%"
+              ></div>
+            </div>
+
+            <p class="nested-description">
+              ${
+                group.unlocked
+                  ? "This abil."
+                  : "This Trinity ability is not unlocked yet in the selected save."
+              }
+            </p>
+
+            <div class="section-block">
+              ${
+                group.marks
+                  .map(
+                    RenderTrinityMark
+                  )
+                  .join("")
+              }
+            </div>
+          </details>
+        `;
+      }
     ).join("");
 
   return BuildCollapsibleSection({
     title:
       "Trinity Marks",
 
-    body,
+    body:
+      `
+        <div class="progress-track">
+          <div
+            class="progress-fill ${completedCount >= totalCount ? "complete" : ""}"
+            style="width:${overallPercent}%"
+          ></div>
+        </div>
+
+        ${body}
+      `,
 
     description:
-      "Every physical Trinity is tracked as an independent completion row. The five Trinity color counters are retained only as research data and never determine an individual row. The eight action-dependent locations remain Unknown until their own environmental/action flags are mapped.",
+      "Type of colored symbol that can be activated with the Trinity command, try to find all 46 marks.",
 
     summaryRight:
-      `${foundCount} found · ${mappedCount} mapped · ${pendingCount} pending`,
+      CompletionSummary(
+        completedCount,
+        totalCount
+      ),
 
     open:
       true,
@@ -1423,6 +1482,12 @@ function RenderColiseum(slot) {
   const olympus =
     slot.completion
       .olympusColiseum;
+
+  let completedCount =
+    0;
+
+  const totalCount =
+    KH1_CONTENT.COLISEUM.length;
 
   const body =
     KH1_CONTENT.COLISEUM
@@ -1438,7 +1503,7 @@ function RenderColiseum(slot) {
             "unknown";
 
           let value =
-            "Mapping needed";
+            "Not Finished";
 
           let description =
             "";
@@ -1456,10 +1521,16 @@ function RenderColiseum(slot) {
                 ? "Finished"
                 : "Not Finished";
 
+            if (
+              completion.complete
+            ) {
+              completedCount++;
+            }
+
             const data =
               completion.data;
 
-            if (
+            /*if (
               entry.completionSource
                 ?.type ===
               "olympusCup"
@@ -1482,7 +1553,7 @@ function RenderColiseum(slot) {
                 description +=
                   ` · flag ${data.flagOffsetHex}`;
               }
-            }
+            }*/
           }
 
           return BuildEntry({
@@ -1512,28 +1583,23 @@ function RenderColiseum(slot) {
       .join("");
 
   const footer =
-    olympus
+    /*olympus
       ? `
         <p class="nested-description">
           Cup completion bits: ${EscapeHTML(olympus.cupCompletion.rawHex)}
           · Olympus story progress: ${EscapeHTML(olympus.storyProgressHex)}
         </p>
       `
-      : "";
+      : */"";
 
-  return BuildCollapsibleSection({
-    title:
-      "Olympus Coliseum",
-
-    body:
-      `<div class="section-block">${body}</div>${footer}`,
-
-    description:
-      "Phil's Training, the story Preliminaries, and the first three cups are now mapped from controlled saves. Hades Cup follows the same cup structure but still benefits from a dedicated controlled test.",
-
-    open:
-      true
-  });
+  return BuildProgressSection(
+    "Olympus Coliseum",
+    completedCount,
+    totalCount,
+    `${body}${footer}`,
+    "A location where you test your skills and strength.",
+    true
+  );
 }
 
 function RenderPostcards(slot) {
@@ -1598,7 +1664,7 @@ function RenderPostcards(slot) {
     current,
     KH1_CONTENT.POSTCARDS.length,
     body,
-    "Each line represents one sequential postcard-mail/reward step.",
+    "Chop chop mailman :D",
     false
   );
 }
@@ -1647,10 +1713,10 @@ function RenderAtlanticaClams(slot) {
                 ? "Opened"
                 : "Not Opened",
 
-            description:
+            /*description:
               flag
                 ? `${flag.saveOffsetHex} · ${flag.maskHex}`
-                : "",
+                : "",*/
 
             hint:
               clam.hint,
@@ -1678,7 +1744,7 @@ function RenderAtlanticaClams(slot) {
     current,
     KH1_CONTENT.ATLANTICA_CLAMS.length,
     body,
-    "All 16 individual clam bits are shown separately. Names/hints can be replaced with exact in-world locations as they are documented.",
+    "Multiple clams that can be found on Atlantica.",
     false
   );
 }
@@ -1795,7 +1861,7 @@ function RenderChests(slot) {
       `,
 
     description:
-      "Watergleam is now individually confirmed. Additional chests can be added as controlled tests identify their bits.",
+      "Still not finished :(",
 
     open:
       false
@@ -1964,9 +2030,9 @@ function RenderJournalCharacters(slot) {
                           )
                         : "Mapping needed",
 
-                    description:
+                    /*description:
                       descriptionParts
-                        .join(" · "),
+                        .join(" · "),*/
 
                     hint:
                       character.content
@@ -2041,7 +2107,7 @@ function RenderJournalCharacters(slot) {
     foundTotal,
     target,
     worlds,
-    "All 103 expected Journal characters are mapped. The main section and every world group now show completion count and percentage.",
+    "People and the enemies that you encounter in the worlds.",
     true
   );
 }
@@ -2118,7 +2184,7 @@ function RenderEnemyJournal(slot) {
     analysis.current,
     analysis.target,
     journalPages,
-    `${analysis.current}/${analysis.target} Heartless Journal entries have been defeated at least once. Kill totals are preserved.`,
+    `${analysis.current}/${analysis.target} Heartless Journal entries have been defeated at least once.`,
     true
   );
 }
@@ -2190,7 +2256,7 @@ function RenderBosses(slot) {
                   let description =
                     "";
 
-                  if (status) {
+                  /*if (status) {
                     const evidenceLabel =
                       status.evidence ===
                       "confirmed"
@@ -2223,7 +2289,7 @@ function RenderBosses(slot) {
                     description =
                       boss.trackingNote ??
                       "Persistent boss completion state still needs controlled mapping.";
-                  }
+                  }*/
 
                   return BuildEntry({
                     name:
@@ -2355,7 +2421,7 @@ function RenderBosses(slot) {
       `,
 
     description:
-      `${analysis.current}/${analysis.mappedTarget} mapped boss completion entries are complete. The final Ansem / Darkside / World of Chaos sequence follows the same maximum-saveable-progress rule as End of the World because KH1 has no normal post-final-boss clear save.`,
+      `${analysis.current}/${analysis.mappedTarget} boss completion entries are complete. The final Ansem / Darkside / World of Chaos sequence are not trackable so it will be marked as complete if you reach the end of the game because KH1 has no normal post-final-boss clear save.`,
 
     summaryRight:
       `${analysis.current}/${analysis.mappedTarget} · ${overallPercent}%`,
@@ -2372,27 +2438,93 @@ function RenderMinigames(slot) {
       "world"
     );
 
-  const analysis =
-    slot.completionAnalysis
-      ?.minigames ?? {
-        current: 0,
-        mappedTarget: 0,
-        target: KH1_CONTENT.MINIGAMES.length,
-        percent: 0,
-        unknownCount: KH1_CONTENT.MINIGAMES.length
-      };
+  function GetStatus(minigame) {
+    return (
+      slot.completion
+        .minigames
+        ?.entries
+        ?.[minigame.key] ??
+      null
+    );
+  }
 
-  /*
-   * Jungle Slider, Vine Jump and Olympus Coliseum are Journal categories
-   * containing several individual course/cup records. Render them as nested
-   * completion lists, matching the way the five 100 Acre Wood minigames are
-   * presented as individual completion entries.
-   *
-   * Jungle Slider / Vine Jump technically store a top-5 leaderboard for each
-   * course. The completion tracker intentionally shows ONLY leaderboard
-   * record #1, per project design. The remaining four raw records are still
-   * preserved by the parser/research data and are not discarded.
-   */
+  function RenderSubrecordEntries(
+    minigame,
+    status
+  ) {
+    return (
+      status.subrecords ?? []
+    )
+      .map(
+        subrecord => {
+          const firstRecord =
+            subrecord.records?.[0] ??
+            subrecord.bestRecord ??
+            null;
+
+          const hasRecord =
+            Boolean(
+              firstRecord &&
+              firstRecord.available
+            );
+
+          const complete =
+            Boolean(
+              subrecord.complete
+            );
+
+          const value =
+            hasRecord
+              ? firstRecord.display
+              : "No record";
+
+          const description =
+            firstRecord?.offsetHex
+              ? `1st record · ${firstRecord.offsetHex}`
+              : "1st record";
+
+          const subrecordMeta =
+            minigame.subrecords
+              ?.find(
+                item =>
+                  item.name ===
+                  subrecord.name
+              ) ??
+            {};
+
+          return BuildEntry({
+            name:
+              subrecord.name,
+
+            value,
+
+            description,
+
+            hint:
+              subrecordMeta.hint ??
+              minigame.hint ??
+              "",
+
+            state:
+              complete
+                ? "complete"
+                : "missing",
+
+            spoiler:
+              !complete,
+
+            external:
+              true,
+
+            url:
+              subrecordMeta.url ??
+              minigame.url
+          });
+        }
+      )
+      .join("");
+  }
+
   function RenderSubrecordMinigame(
     minigame,
     status
@@ -2416,76 +2548,12 @@ function RenderMinigames(slot) {
         total
       );
 
-    /*
-     * Parent/category names are navigation labels, not undiscovered rewards.
-     *
-     * Keep Jungle Slider, Vine Jump, and Olympus Coliseum visible even when
-     * some/all of their child course records are still missing. Only the
-     * individual missing subrecords are spoiler-hidden.
-     */
     const parentName =
       BuildExternalName(
         minigame.name,
         minigame.url,
         false
       );
-
-    const entries =
-      subrecords
-        .map(
-          subrecord => {
-            /*
-             * For leaderboard-based courses this is specifically record #1,
-             * not every available top-5 record.
-             * For Olympus each cup only has one saved record, so the same
-             * field works for both structures.
-             */
-            const firstRecord =
-              subrecord.records?.[0] ??
-              subrecord.bestRecord ??
-              null;
-
-            const hasRecord =
-              Boolean(
-                firstRecord &&
-                firstRecord.available
-              );
-
-            const value =
-              hasRecord
-                ? firstRecord.display
-                : "No record";
-
-            const description =
-              firstRecord?.offsetHex
-                ? `1st record · ${firstRecord.offsetHex}`
-                : "1st record";
-
-            return BuildEntry({
-              name:
-                subrecord.name,
-
-              value,
-
-              description,
-
-              state:
-                hasRecord
-                  ? "complete"
-                  : "missing",
-
-              spoiler:
-                !hasRecord,
-
-              external:
-                true,
-
-              url:
-                minigame.url
-            });
-          }
-        )
-        .join("");
 
     return `
       <details class="nested-list minigame-record-list">
@@ -2495,7 +2563,7 @@ function RenderMinigames(slot) {
           </span>
 
           <span>
-            ${completed}/${total} · ${percent}%
+            ${CompletionSummary(completed, total)}
           </span>
         </summary>
 
@@ -2507,11 +2575,71 @@ function RenderMinigames(slot) {
         </div>
 
         <div class="section-block">
-          ${entries}
+          ${RenderSubrecordEntries(minigame, status)}
         </div>
       </details>
     `;
   }
+
+  function RenderNormalMinigame(
+    minigame,
+    status
+  ) {
+    let value =
+      status?.complete
+        ? "Finished"
+        : "Not Finished";
+
+    if (
+      status?.scoreDisplay
+    ) {
+      value +=
+        ` · ${status.scoreLabel}: ${status.scoreDisplay}`;
+    }
+
+    const description =
+      status
+        ? (
+            `${status.completionOffsetHex} / ${status.maskHex}` +
+            ` · Score ${status.scoreOffsetHex}`
+          )
+        : (
+            minigame.trackingNote ??
+            "Completion data is not available for this entry."
+          );
+
+    return BuildEntry({
+      name:
+        minigame.name,
+
+      value,
+
+      description,
+
+      hint:
+        minigame.hint,
+
+      state:
+        status?.complete
+          ? "complete"
+          : "missing",
+
+      spoiler:
+        !status?.complete,
+
+      external:
+        true,
+
+      url:
+        minigame.url
+    });
+  }
+
+  let overallCompleted =
+    0;
+
+  const overallTarget =
+    KH1_CONTENT.MINIGAMES.length;
 
   const body =
     Object.entries(
@@ -2519,159 +2647,109 @@ function RenderMinigames(slot) {
     )
       .map(
         ([world, minigames]) => {
-          let worldMapped =
-            0;
+          const statuses =
+            minigames.map(
+              minigame => ({
+                minigame,
+                status:
+                  GetStatus(
+                    minigame
+                  )
+              })
+            );
 
-          let worldFinished =
-            0;
+          const worldCompleted =
+            statuses.filter(
+              item =>
+                item.status?.complete
+            ).length;
 
-          const entries =
-            minigames
-              .map(
-                minigame => {
-                  const status =
-                    slot.completion
-                      .minigames
-                      ?.entries
-                      ?.[minigame.key] ??
-                    null;
+          const worldTarget =
+            minigames.length;
 
-                  if (status) {
-                    worldMapped++;
+          overallCompleted +=
+            worldCompleted;
 
-                    if (
-                      status.complete
-                    ) {
-                      worldFinished++;
-                    }
-                  }
+          /*
+           * Olympus Coliseum contains a single Journal category whose name is
+           * also "Olympus Coliseum". Render its cup rows directly inside the
+           * world section so the UI never shows an Olympus Coliseum section
+           * nested inside another section with the same name.
+           */
+          const flattenSingleMatchingGroup =
+            statuses.length === 1 &&
+            statuses[0].minigame.name === world &&
+            Boolean(
+              statuses[0].status
+                ?.subrecords
+                ?.length
+            );
 
-                  /*
-                   * Nested course/cup categories:
-                   * - Jungle Slider: 5 slider courses
-                   * - Vine Jump: 4 jump courses
-                   * - Olympus Coliseum: 4 cup time-trial records
-                   */
-                  if (
-                    status?.subrecords
-                  ) {
-                    return RenderSubrecordMinigame(
-                      minigame,
-                      status
-                    );
-                  }
+          /*
+           * The overall Minigames total still follows the eight Journal
+           * categories. For the flattened Olympus world summary, show the
+           * four visible cup rows so partial cup progress is not hidden.
+           */
+          const worldDisplayCompleted =
+            flattenSingleMatchingGroup
+              ? statuses[0].status.subrecords.filter(
+                  subrecord =>
+                    subrecord.complete
+                ).length
+              : worldCompleted;
 
-                  let value =
-                    "Mapping needed";
-
-                  if (status) {
-                    value =
-                      status.complete
-                        ? "Finished"
-                        : "Not Finished";
-
-                    if (
-                      status.scoreDisplay
-                    ) {
-                      value +=
-                        ` · ${status.scoreLabel}: ${status.scoreDisplay}`;
-                    }
-                  }
-
-                  let description =
-                    "";
-
-                  if (status) {
-                    const evidence =
-                      status.evidence ===
-                      "confirmed"
-                        ? "Confirmed mapping"
-                        : "Strongly inferred mapping";
-
-                    description =
-                      `${evidence} · ` +
-                      `${status.completionOffsetHex} / ${status.maskHex}` +
-                      ` · Score ${status.scoreOffsetHex}`;
-                  } else {
-                    description =
-                      minigame.trackingNote ??
-                      "Persistent finished-state and/or score location still needs controlled mapping.";
-                  }
-
-                  return BuildEntry({
-                    name:
-                      minigame.name,
-
-                    value,
-
-                    description,
-
-                    hint:
-                      minigame.hint,
-
-                    state:
-                      status
-                        ? (
-                            status.complete
-                              ? "complete"
-                              : "missing"
-                          )
-                        : "unknown",
-
-                    spoiler:
-                      !status ||
-                      !status.complete,
-
-                    external:
-                      true,
-
-                    url:
-                      minigame.url
-                  });
-                }
-              )
-              .join("");
-
-          const worldUnknown =
-            minigames.length -
-            worldMapped;
+          const worldDisplayTarget =
+            flattenSingleMatchingGroup
+              ? statuses[0].status.subrecords.length
+              : worldTarget;
 
           const worldPercent =
             Percent(
-              worldFinished,
-              worldMapped
+              worldDisplayCompleted,
+              worldDisplayTarget
             );
+
+          const entries =
+            flattenSingleMatchingGroup
+              ? RenderSubrecordEntries(
+                  statuses[0].minigame,
+                  statuses[0].status
+                )
+              : statuses
+                  .map(
+                    item => {
+                      if (
+                        item.status?.subrecords
+                      ) {
+                        return RenderSubrecordMinigame(
+                          item.minigame,
+                          item.status
+                        );
+                      }
+
+                      return RenderNormalMinigame(
+                        item.minigame,
+                        item.status
+                      );
+                    }
+                  )
+                  .join("");
 
           return `
             <details class="nested-list">
               <summary>
                 ${EscapeHTML(world)}
                 <span>
-                  ${
-                    worldMapped > 0
-                      ? `${worldFinished}/${worldMapped} mapped · ${worldPercent}%`
-                      : "Mapping needed"
-                  }
-                  ${
-                    worldUnknown > 0
-                      ? ` · ${worldUnknown} ?`
-                      : ""
-                  }
+                  ${CompletionSummary(worldDisplayCompleted, worldDisplayTarget)}
                 </span>
               </summary>
 
-              ${
-                worldMapped > 0
-                  ? `
-                    <div class="progress-track">
-                      <div
-                        class="progress-fill ${worldFinished >= worldMapped ? "complete" : ""}"
-                        style="width:${worldPercent}%"
-                      ></div>
-                    </div>
-                  `
-                  : ""
-              }
+              <div class="progress-track">
+                <div
+                  class="progress-fill ${worldDisplayCompleted >= worldDisplayTarget ? "complete" : ""}"
+                  style="width:${worldPercent}%"
+                ></div>
+              </div>
 
               <div class="section-block">
                 ${entries}
@@ -2684,8 +2762,8 @@ function RenderMinigames(slot) {
 
   const overallPercent =
     Percent(
-      analysis.current,
-      analysis.mappedTarget
+      overallCompleted,
+      overallTarget
     );
 
   return BuildCollapsibleSection({
@@ -2694,27 +2772,24 @@ function RenderMinigames(slot) {
 
     body:
       `
-        ${
-          analysis.mappedTarget > 0
-            ? `
-              <div class="progress-track">
-                <div
-                  class="progress-fill ${analysis.current >= analysis.mappedTarget ? "complete" : ""}"
-                  style="width:${overallPercent}%"
-                ></div>
-              </div>
-            `
-            : ""
-        }
+        <div class="progress-track">
+          <div
+            class="progress-fill ${overallCompleted >= overallTarget ? "complete" : ""}"
+            style="width:${overallPercent}%"
+          ></div>
+        </div>
 
         ${body}
       `,
 
     description:
-      `${analysis.current}/${analysis.mappedTarget} Journal mini-games are fully finished. Jungle Slider, Vine Jump, and Olympus Coliseum expand into their individual course/cup entries. Only the 1st leaderboard record is shown for each Jungle Slider and Vine Jump course.`,
+      "Minigame here, minigame there, minigame everywhere.",
 
     summaryRight:
-      `${analysis.current}/${analysis.mappedTarget} mapped · ${overallPercent}%`,
+      CompletionSummary(
+        overallCompleted,
+        overallTarget
+      ),
 
     open:
       false
@@ -2765,6 +2840,23 @@ function RenderSynthesis(slot) {
       .SYNTHESIS_SETS
       .map(
         set => {
+          const setCompleted =
+            set.items.filter(
+              item =>
+                completedIndexes.has(
+                  item.synthesisIndex
+                )
+            ).length;
+
+          const setTarget =
+            set.items.length;
+
+          const setPercent =
+            Percent(
+              setCompleted,
+              setTarget
+            );
+
           const entries =
             set.items
               .map(
@@ -2795,12 +2887,12 @@ function RenderSynthesis(slot) {
                         ? "Synthesized"
                         : "Not Synthesized",
 
-                    description:
+                    /*description:
                       `${
                         ownership.owned
                           ? "Owned now"
                           : "Not owned now"
-                      } · Synthesis index ${item.synthesisIndex} · Item ID ${item.itemId}`,
+                      } · Synthesis index ${item.synthesisIndex} · Item ID ${item.itemId}`,*/
 
                     hint:
                       item.hint,
@@ -2827,8 +2919,15 @@ function RenderSynthesis(slot) {
             <details class="nested-list" open>
               <summary>
                 ${EscapeHTML(set.name)}
-                <span>${set.items.length} items</span>
+                <span>${CompletionSummary(setCompleted, setTarget)}</span>
               </summary>
+
+              <div class="progress-track">
+                <div
+                  class="progress-fill ${setCompleted >= setTarget ? "complete" : ""}"
+                  style="width:${setPercent}%"
+                ></div>
+              </div>
 
               ${
                 set.unlockHint
@@ -2850,13 +2949,11 @@ function RenderSynthesis(slot) {
     synthesis.completedCount,
     synthesis.target,
     sets,
-    `${synthesis.completedCount}/${synthesis.target} recipes have been synthesized at least once. ` +
-    `${ownedNow}/${totalItems} synthesis-result items are currently owned. ` +
-    `Synthesis stage ${synthesis.listProgress?.raw ?? "?"}: ${synthesis.listProgress?.label ?? "Unknown"}. ` +
-    `Synthesis history and current inventory are intentionally tracked separately.`,
+    `Allows Sora to craft powerful weapons, gear, and items by bringing materials dropped by Heartless to the Moogles in the Traverse Town's Accessory Shop.`,
     true
   );
 }
+
 function RenderSynthesisTab(slot) {
   return RenderSynthesis(slot);
 }
@@ -2874,47 +2971,55 @@ function RenderReports(slot) {
       reports.reports
     );
 
-  const entries =
+  const reportEntries =
+    KH1_CONTENT.ANSEM_REPORTS ??
     [];
 
-  for (
-    let report = 1;
-    report <= 13;
-    report++
-  ) {
-    const has =
-      owned.has(report);
+  const entries =
+    reportEntries
+      .map(
+        report => {
+          const has =
+            owned.has(
+              report.number
+            );
 
-    entries.push(
-      BuildEntry({
-        name:
-          `Ansem's Report ${report}`,
+          return BuildEntry({
+            name:
+              report.name,
 
-        value:
-          has
-            ? "Obtained"
-            : "Missing",
+            value:
+              has
+                ? "Obtained"
+                : "Missing",
 
-        state:
-          has
-            ? "complete"
-            : "missing",
+            hint:
+              report.hint,
 
-        spoiler:
-          !has,
+            state:
+              has
+                ? "complete"
+                : "missing",
 
-        external:
-          true
-      })
-    );
-  }
+            spoiler:
+              !has,
+
+            external:
+              Boolean(report.url),
+
+            url:
+              report.url
+          });
+        }
+      )
+      .join("");
 
   return BuildProgressSection(
     "Ansem Reports",
     reports.count,
-    13,
-    entries.join(""),
-    "",
+    reportEntries.length,
+    entries,
+    "",/*"Edit each report's hint and url directly in KH1_CONTENT.ANSEM_REPORTS.",*/
     true
   );
 }
@@ -2929,68 +3034,64 @@ function RenderPuppies(slot) {
     );
 
   const groups =
-    [];
+    (
+      KH1_CONTENT.PUPPY_GROUPS ??
+      []
+    )
+      .map(
+        group => {
+          const ids =
+            [];
 
-  for (
-    let start = 1;
-    start <= 99;
-    start += 3
-  ) {
-    const end =
-      Math.min(
-        start + 2,
-        99
-      );
+          for (
+            let id = group.start;
+            id <= group.end;
+            id++
+          ) {
+            ids.push(id);
+          }
 
-    const ids =
-      [];
+          const current =
+            ids.filter(
+              id =>
+                found.has(id)
+            ).length;
 
-    for (
-      let id = start;
-      id <= end;
-      id++
-    ) {
-      ids.push(id);
-    }
+          return BuildEntry({
+            name:
+              group.name,
 
-    const current =
-      ids.filter(
-        id =>
-          found.has(id)
-      ).length;
+            value:
+              `${current}/${ids.length}`,
 
-    groups.push(
-      BuildEntry({
-        name:
-          `Puppies ${start}-${end}`,
+            hint:
+              group.hint,
 
-        value:
-          `${current}/${ids.length}`,
+            state:
+              EntryState(
+                current,
+                ids.length
+              ),
 
-        state:
-          EntryState(
-            current,
-            ids.length
-          ),
+            spoiler:
+              current < ids.length,
 
-        spoiler:
-          current < ids.length,
+            external:
+              true,
 
-        external:
-          true,
-
-        url:
-          "https://www.khguides.com/kh/collectibles/puppies/"
-      })
-    );
-  }
+            url:
+              group.url
+          });
+        }
+      )
+      .join("");
 
   return BuildProgressSection(
     "99 Puppies",
     puppies.foundCount,
     99,
-    groups.join(""),
-    "Exact puppy IDs are read from the 13-byte Dalmatians bitfield.",
+    groups,
+    "Gotta collect 'em all! you need to return them to their parents.",
     true
   );
 }
@@ -3030,34 +3131,47 @@ function RenderGummiBlueprints(slot) {
             groupEntries
               .map(
                 entry =>
-                  BuildEntry({
-                    name:
-                      entry.name,
-
-                    value:
-                      entry.owned
-                        ? "Obtained"
-                        : "Missing",
-
-                    description:
-                      `${entry.offsetHex} · blueprint index ${entry.index}`,
-
-                    state:
-                      entry.owned
-                        ? "complete"
-                        : "missing",
-
-                    spoiler:
-                      !entry.owned,
-
-                    external:
-                      true,
-
-                    url:
-                      group.url ||
+                  (() => {
+                    const override =
                       KH1_CONTENT
-                        .GUMMI_BLUEPRINT_URL
-                  })
+                        .GUMMI_BLUEPRINT_OVERRIDES
+                        ?.[entry.index] ??
+                      {};
+
+                    return BuildEntry({
+                      name:
+                        entry.name,
+
+                      value:
+                        entry.owned
+                          ? "Obtained"
+                          : "Missing",
+
+                      /*description:
+                        `${entry.offsetHex} · blueprint index ${entry.index}`,*/
+
+                      hint:
+                        override.hint ??
+                        "",
+
+                      state:
+                        entry.owned
+                          ? "complete"
+                          : "missing",
+
+                      spoiler:
+                        !entry.owned,
+
+                      external:
+                        true,
+
+                      url:
+                        override.url ||
+                        group.url ||
+                        KH1_CONTENT
+                          .GUMMI_BLUEPRINT_URL
+                    });
+                  })()
               )
               .join("");
 
@@ -3087,7 +3201,7 @@ function RenderGummiBlueprints(slot) {
       .GUMMI_BLUEPRINT_NAMES
       .length,
     groups,
-    "Blueprint ownership is a 48-byte table at 0xBEBF. The 48-entry PC index-to-name order is accepted after the user's one-hot blueprint spot-checks matched the expected models.",
+    "collected Gummi ship blueprints.",
     true
   );
 }
@@ -3113,6 +3227,12 @@ function RenderCharacters(slot) {
             character.abilities
               ?.length ?? 0;
 
+          const override =
+            KH1_CONTENT
+              .CHARACTER_DETAIL_OVERRIDES
+              ?.[character.name] ??
+            {};
+
           return BuildEntry({
             name:
               character.name,
@@ -3127,11 +3247,19 @@ function RenderCharacters(slot) {
               `AP ${character.ap} · STR ${character.strength} · DEF ${character.defense} · ` +
               `${abilityCount} learned abilities`,
 
+            hint:
+              override.hint ??
+              "",
+
             state:
               "info",
 
             external:
-              true
+              Boolean(override.url),
+
+            url:
+              override.url ??
+              ""
           });
         }
       )
@@ -3190,7 +3318,7 @@ function RenderAnalyzerTabs() {
 }
 
 const ANALYZER_TAB_RENDERERS =
-  Object.freeze({
+  {
     main:
       RenderMainTab,
 
@@ -3208,7 +3336,7 @@ const ANALYZER_TAB_RENDERERS =
 
     extra:
       RenderExtraTab
-  });
+  };
 
 function RenderActiveTab(slot) {
   const renderer =

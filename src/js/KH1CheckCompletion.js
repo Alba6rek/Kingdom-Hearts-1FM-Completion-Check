@@ -415,7 +415,7 @@ function BuildSlotCompletion(slot) {
       percent:
         CalculatePercent(
           completedMinigames.length,
-          minigameEntries.length
+          minigamesTarget
         ),
 
       mappingCoveragePercent:

@@ -402,9 +402,10 @@ function DecodeTrinity(save, KH1_SAVE, KH1_TRINITY_MARK_STATES = {}) {
   /*
    * Decode each physical Trinity independently.
    *
-   * Do not limit mappings to 0x1C6C..0x1C7F. The eight action-dependent
-   * Trinities may eventually resolve to environment/event flags elsewhere in
-   * the save, so each mapping reads its absolute save offset directly.
+   * Do not limit mappings to 0x1C6C..0x1C7F. Forty-five Trinities use the
+   * normal mark table, while Yellow Trinity #2 uses the exceptional persistent
+   * state at 0x1E10 bit 0x01. Each mapping therefore uses an absolute save
+   * offset.
    */
   const markStates =
     DecodeMappedBitStates(

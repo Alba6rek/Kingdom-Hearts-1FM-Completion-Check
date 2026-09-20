@@ -1,4 +1,4 @@
-const KH1_DICTIONARY = Object.freeze({
+const KH1_DICTIONARY = {
   "CHARACTER_NAMES": [
     "Sora",
     "Donald",
@@ -163,7 +163,7 @@ const KH1_DICTIONARY = Object.freeze({
    * Boss display names.
    * Binary rules live in kh1-database.js.
    */
-  "BOSS_NAMES": Object.freeze({
+  "BOSS_NAMES": {
     "darkside": "Darkside",
     "guardArmor": "Guard Armor",
     "oppositeArmor": "Opposite Armor",
@@ -205,7 +205,7 @@ const KH1_DICTIONARY = Object.freeze({
     "ansem": "Ansem, Seeker of Darkness",
     "darksideFinal": "Darkside - Final",
     "worldOfChaos": "World of Chaos"
-  }),
+  },
 
   /*
    * Jiminy's Journal Mini Games.
@@ -214,7 +214,7 @@ const KH1_DICTIONARY = Object.freeze({
    * Jungle Slider, Vine Jump, five Hundred Acre Wood games, and the
    * Olympus Coliseum time-trial record group.
    */
-  "MINIGAME_NAMES": Object.freeze({
+  "MINIGAME_NAMES": {
     "jungleSlider": "Jungle Slider",
     "vineJump": "Vine Jump",
     "poohHunnyHunt": "Pooh's Hunny Hunt",
@@ -223,73 +223,73 @@ const KH1_DICTIONARY = Object.freeze({
     "tiggerGiantPot": "Tigger's Giant Pot",
     "poohMuddyPath": "Pooh's Muddy Path",
     "olympusColiseum": "Olympus Coliseum"
-  }),
+  },
 
-  "MINIGAME_SUBRECORD_NAMES": Object.freeze({
-    "jungleSlider": Object.freeze([
+  "MINIGAME_SUBRECORD_NAMES": {
+    "jungleSlider": [
       "Green Serpent",
       "Splash Tunnel",
       "Jade Spiral",
       "Panic Fall",
       "Shadow Cavern"
-    ]),
+    ],
 
-    "vineJump": Object.freeze([
+    "vineJump": [
       "Jump Course",
       "Trap Course",
       "Acrobatic Course",
       "Expert Course"
-    ]),
+    ],
 
-    "olympusColiseum": Object.freeze([
+    "olympusColiseum": [
       "Phil Cup",
       "Pegasus Cup",
       "Hercules Cup",
       "Hades Cup"
-    ])
-  }),
+    ]
+  },
 
-  "MINIGAME_SCORE_METADATA": Object.freeze({
-    "jungleSlider": Object.freeze({
+  "MINIGAME_SCORE_METADATA": {
+    "jungleSlider": {
       unit: "time",
       label: "Courses"
-    }),
+    },
 
-    "vineJump": Object.freeze({
+    "vineJump": {
       unit: "time",
       label: "Courses"
-    }),
+    },
 
-    "olympusColiseum": Object.freeze({
+    "olympusColiseum": {
       unit: "time",
       label: "Cup records"
-    }),
+    },
 
-    "poohHunnyHunt": Object.freeze({
+    "poohHunnyHunt": {
       unit: "licks",
       label: "Record"
-    }),
+    },
 
-    "blockTigger": Object.freeze({
+    "blockTigger": {
       unit: "points",
       label: "Record"
-    }),
+    },
 
-    "poohSwing": Object.freeze({
+    "poohSwing": {
       unit: "yards",
       label: "Record"
-    }),
+    },
 
-    "tiggerGiantPot": Object.freeze({
+    "tiggerGiantPot": {
       unit: "time",
       label: "Best time"
-    }),
+    },
 
-    "poohMuddyPath": Object.freeze({
+    "poohMuddyPath": {
       unit: "time",
       label: "Best time"
-    })
-  }),
+    }
+  },
 
   "GUMMI_BLUEPRINT_NAMES": [
     "Kingdom",
@@ -845,6 +845,6 @@ const KH1_DICTIONARY = Object.freeze({
     ]
 ]
 
-});
+};
 
 export default KH1_DICTIONARY;

@@ -2136,8 +2136,8 @@ function ParseWorldStatus(
         completionRule =
           "story progress >= 0x46";
 
-        completionNote =
-          "Monstro uses its story-progress byte because its world-map status does not reliably reach 4.";
+        /*completionNote =
+          "Monstro uses its story-progress byte because its world-map status does not reliably reach 4.";*/
 
         if (
           complete

@@ -1,7 +1,12 @@
+import fs from "node:fs";
 import KH1_CONTENT from "../src/js/kh1-content.js";
 
 import {
   KH1_ARCHIVE,
+  KH1_JOURNAL_CHARACTER_STATES,
+  KH1_MINIGAME_STATES,
+  KH1_BOSS_COMPLETION_STATES,
+  KH1_OLYMPUS,
   KH1_TRINITY_MARK_STATES
 } from "../src/js/kh1-database.js";
 
@@ -134,20 +139,106 @@ Object.entries(
   }
 );
 
-const expectedPending =
-  [3, 4, 18, 19, 20, 24, 32, 34];
-
 Assert(
-  mapped.length === 38,
-  `Expected 38 mapped Trinity rows, found ${mapped.length}.`
+  mapped.length === 46,
+  `Expected 46 mapped Trinity rows, found ${mapped.length}.`
 );
 
 Assert(
-  JSON.stringify(
-    pending.sort((a, b) => a - b)
-  ) ===
-  JSON.stringify(expectedPending),
-  `Unexpected pending Trinity rows: ${pending.join(", ")}.`
+  pending.length === 0,
+  `Expected no pending Trinity rows, found: ${pending.join(", ")}.`
+);
+
+
+
+/*
+ * Project data files intentionally use plain JavaScript objects/arrays.
+ * Research confidence is represented by data fields, not Object.freeze().
+ */
+[
+  "src/js/kh1-database.js",
+  "src/js/kh1-dictionary.js",
+  "src/js/kh1-content.js"
+].forEach(file => {
+  const source = fs.readFileSync(file, "utf8");
+  Assert(
+    !source.includes("Object.freeze("),
+    `${file} must use plain data objects/arrays rather than Object.freeze().`
+  );
+});
+
+Assert(
+  Object.keys(KH1_JOURNAL_CHARACTER_STATES).length === 103,
+  "Expected 103 Journal character entries."
+);
+
+Assert(
+  Object.keys(KH1_MINIGAME_STATES).length === 8,
+  "Expected 8 Journal minigame entries."
+);
+
+["poohHunnyHunt", "blockTigger", "poohSwing", "tiggerGiantPot", "poohMuddyPath"].forEach(key => {
+  Assert(
+    KH1_MINIGAME_STATES[key]?.evidence === "confirmed",
+    `100 Acre Wood minigame ${key} must be marked confirmed.`
+  );
+});
+
+Assert(
+  KH1_OLYMPUS.cups.hadesCup.confidence === "confirmed",
+  "Hades Cup must be marked confirmed."
+);
+
+Assert(
+  Object.keys(KH1_BOSS_COMPLETION_STATES).length === 41,
+  "Expected 41 boss tracker entries."
+);
+
+Assert(
+  !Object.values(KH1_BOSS_COMPLETION_STATES).some(definition => definition.evidence === "strong"),
+  "Boss database still contains a strong/unconfirmed mapping."
+);
+
+Assert(
+  KH1_CONTENT.ANSEM_REPORTS?.length === 13,
+  "Expected 13 editable Ansem Report metadata rows."
+);
+
+Assert(
+  KH1_CONTENT.PUPPY_GROUPS?.length === 33,
+  "Expected 33 editable puppy-triplet metadata rows."
+);
+
+[
+  ["jungleSlider", 5],
+  ["vineJump", 4],
+  ["olympusColiseum", 4]
+].forEach(([key, expected]) => {
+  const definition =
+    KH1_CONTENT.MINIGAMES.find(
+      item => item.key === key
+    );
+
+  Assert(
+    definition?.subrecords?.length === expected,
+    `Minigame ${key} must expose ${expected} editable child metadata rows.`
+  );
+});
+
+const indexSource =
+  fs.readFileSync(
+    "src/js/index.js",
+    "utf8"
+  );
+
+Assert(
+  !indexSource.includes("found · ${mappedCount} mapped"),
+  "Trinity summary still exposes mapped/pending counters."
+);
+
+Assert(
+  !indexSource.includes("mapped · ${overallPercent}%"),
+  "Minigame summary still uses mapped wording."
 );
 
 console.log(

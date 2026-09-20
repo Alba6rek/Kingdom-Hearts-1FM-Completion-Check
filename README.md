@@ -6,35 +6,42 @@ This Read me still not finalized
 
 ## V 0.1.0:
 
-- Game Status
-- World progress
-- Keyblades
-- Magic
-- Summons
-- Shields
-- Staves
-- Olumpus Coliseum
-- Postcards
-- Atlantica Clams
-- Journal Characters
-- Heartless
-- Synthesis Items
-- Ansem Reports
-- 99 Pupies
-- Gummi Ship Blueprints
+- Game Status.
+- World progress.
+- Keyblades.
+- Magic.
+- Summons.
+- Shields.
+- Staves.
+- Olumpus Coliseum.
+- Postcards.
+- Atlantica Clams.
+- Journal Characters.
+- Heartless.
+- Synthesis Items.
+- Ansem Reports.
+- 99 Pupies.
+- Gummi Ship Blueprints.
 - Extra information About the other Characters
 - Some Documentations.
 
 ## V 0.2.0:
 - Updates URLs
 - Most Trinities are found except some.
-- Bosses are tracked
-- Minigames tracked
+- Bosses are tracked.
+- Minigames tracked.
+
+
+## V 0.4.0:
+- Dont ask for V 0.3.0
+- URL Updated.
+- Hints Added.
+- All trinities tracked.
+- removed unwanted data.
+- update the database/dictionary for the project (chests still not finished)
+- remove the unwanted description .
 
 ## in-progress:
 
-- URLs
-- Hints
-- Trinity
 - Chests
 - Site Design (If needed)

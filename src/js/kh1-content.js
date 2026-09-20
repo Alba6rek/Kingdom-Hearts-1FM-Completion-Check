@@ -27,23 +27,20 @@ This is intentionally separate from:
     kh1-functions.js
         HOW binary data is decoded.
 
-Many fields below contain:
+Every displayed completion row should get its user-facing metadata here.
+Most static rows contain these fields directly:
 
     hint: ""
     url: ""
 
 You can fill them later without touching the save parser.
 
-When a Journal character has no custom URL override, the shared KHGuides
-Journal URL is used. Other sections may define their own category URL.
+Rows that are generated dynamically (for example Gummi blueprint names or
+character detail rows) use a small *_OVERRIDES object in this same file.
+This keeps links and hints out of index.js and out of the binary database.
 */
 
-const KH1_GUIDE_URLS = Object.freeze({
-  TRINITIES:
-    "https://www.khguides.com/kh/collectibles/trinities/"
-});
-
-const KH1_CONTENT = Object.freeze({
+const KH1_CONTENT = {
   TABS: [
     {
       id: "main",
@@ -78,20 +75,20 @@ const KH1_CONTENT = Object.freeze({
    * save parser only needs world names/status values, while this file decides
    * where a displayed world name should link.
    */
-  WORLD_PROGRESS_URLS: Object.freeze({
-    "Traverse Town": "https://www.khguides.com/kh/traverse-town/",
-    "Wonderland": "https://www.khguides.com/kh/wonderland/",
-    "Olympus Coliseum": "https://www.khguides.com/kh/olympus-coliseum/",
-    "Deep Jungle": "https://www.khguides.com/kh/deep-jungle/",
-    "Agrabah": "https://www.khguides.com/kh/agrabah/",
-    "Atlantica": "https://www.khguides.com/kh/atlantica/",
-    "Halloween Town": "https://www.khguides.com/kh/halloween-town/",
-    "Neverland": "https://www.khguides.com/kh/neverland/",
-    "Hollow Bastion": "https://www.khguides.com/kh/hollow-bastion/",
-    "End of the World": "https://www.khguides.com/kh/end-of-the-world/",
-    "Monstro": "https://www.khguides.com/kh/monstro/",
-    "100 Acre Wood": "https://www.khguides.com/kh/hundred-acre-wood/"
-  }),
+  WORLD_PROGRESS_META: {
+    "Traverse Town": { hint: "", url: "https://www.khguides.com/kh/traverse-town/" },
+    "Wonderland": { hint: "", url: "https://www.khguides.com/kh/wonderland/" },
+    "Olympus Coliseum": { hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/" },
+    "Deep Jungle": { hint: "", url: "https://www.khguides.com/kh/deep-jungle/" },
+    "Agrabah": { hint: "", url: "https://www.khguides.com/kh/agrabah/" },
+    "Atlantica": { hint: "", url: "https://www.khguides.com/kh/atlantica/" },
+    "Halloween Town": { hint: "", url: "https://www.khguides.com/kh/halloween-town/" },
+    "Neverland": { hint: "", url: "https://www.khguides.com/kh/neverland/" },
+    "Hollow Bastion": { hint: "", url: "https://www.khguides.com/kh/hollow-bastion/" },
+    "End of the World": { hint: "", url: "https://www.khguides.com/kh/end-of-the-world/" },
+    "Monstro": { hint: "", url: "https://www.khguides.com/kh/monstro/" },
+    "100 Acre Wood": { hint: "", url: "https://www.khguides.com/kh/hundred-acre-wood/" }
+  },
 
   /*
    * Sora weapons.
@@ -102,23 +99,23 @@ const KH1_CONTENT = Object.freeze({
    */
   KEYBLADES: [
     { itemId: 81,  name: "Kingdom Key",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#kingdom-key" },
-    { itemId: 86,  name: "Jungle King",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#jungle-king" },
-    { itemId: 87,  name: "Three Wishes",      hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#three-wishes" },
-    { itemId: 88,  name: "Fairy Harp",        hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#fairy-harp" },
-    { itemId: 89,  name: "Pumpkinhead",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#pumpkinhead" },
-    { itemId: 90,  name: "Crabclaw",          hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#crabclaw" },
-    { itemId: 91,  name: "Divine Rose",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#divine-rose" },
-    { itemId: 92,  name: "Spellbinder",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#spellbinder" },
-    { itemId: 93,  name: "Olympia",           hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#olympia" },
-    { itemId: 94,  name: "Lionheart",         hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#lionheart" },
-    { itemId: 95,  name: "Metal Chocobo",     hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#metal-chocobo" },
-    { itemId: 96,  name: "Oathkeeper",        hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#oathkeeper" },
-    { itemId: 97,  name: "Oblivion",          hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#oblivion" },
-    { itemId: 98,  name: "Lady Luck",         hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#lady-luck" },
-    { itemId: 99,  name: "Wishing Star",      hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#wishing-star" },
-    { itemId: 100, name: "Ultima Weapon",     hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#ultima-weapon" },
-    { itemId: 101, name: "Diamond Dust",      hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#diamond-dust" },
-    { itemId: 102, name: "One-Winged Angel",  hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#one-winged-angel" }
+    { itemId: 86,  name: "Jungle King",       hint: "Seal the Keyhole in Deep Jungle.", url: "https://www.khguides.com/kh/inventory/weapons/#jungle-king" },
+    { itemId: 87,  name: "Three Wishes",      hint: "Seal the Keyhole in Agrabah.", url: "https://www.khguides.com/kh/inventory/weapons/#three-wishes" },
+    { itemId: 88,  name: "Fairy Harp",        hint: "Seal the Keyhole in Neverland.", url: "https://www.khguides.com/kh/inventory/weapons/#fairy-harp" },
+    { itemId: 89,  name: "Pumpkinhead",       hint: "Seal the Keyhole in Halloween Town.", url: "https://www.khguides.com/kh/inventory/weapons/#pumpkinhead" },
+    { itemId: 90,  name: "Crabclaw",          hint: "Seal the Keyhole in Atlantica.", url: "https://www.khguides.com/kh/inventory/weapons/#crabclaw" },
+    { itemId: 91,  name: "Divine Rose",       hint: "Speak to Belle in the Library of Hollow Bastion (2nd visit).", url: "https://www.khguides.com/kh/inventory/weapons/#divine-rose" },
+    { itemId: 92,  name: "Spellbinder",       hint: "Received from Merlin in Traverse Town after obtaining all first-tier magic spells.", url: "https://www.khguides.com/kh/inventory/weapons/#spellbinder" },
+    { itemId: 93,  name: "Olympia",           hint: "Complete the Phil Cup, Pegasus Cup, and Hercules Cup with the entire party.", url: "https://www.khguides.com/kh/inventory/weapons/#olympia" },
+    { itemId: 94,  name: "Lionheart",         hint: "Defeat Leon & Cloud in the Hades Cup.", url: "https://www.khguides.com/kh/inventory/weapons/#lionheart" },
+    { itemId: 95,  name: "Metal Chocobo",     hint: "Defeat Cloud in the Hercules Cup.", url: "https://www.khguides.com/kh/inventory/weapons/#metal-chocobo" },
+    { itemId: 96,  name: "Oathkeeper",        hint: "Speak to Kairi in the Waterway of Traverse Town (4th visit).", url: "https://www.khguides.com/kh/inventory/weapons/#oathkeeper" },
+    { itemId: 97,  name: "Oblivion",          hint: "Obtained from a chest in the Grand Hall of Hollow Bastion (2nd visit).", url: "https://www.khguides.com/kh/inventory/weapons/#oblivion" },
+    { itemId: 98,  name: "Lady Luck",         hint: "Unseal the White Trinity in Wonderland.", url: "https://www.khguides.com/kh/inventory/weapons/#lady-luck" },
+    { itemId: 99,  name: "Wishing Star",      hint: "Found in a chest within Geppetto's House in Traverse Town.", url: "https://www.khguides.com/kh/inventory/weapons/#wishing-star" },
+    { itemId: 100, name: "Ultima Weapon",     hint: "Obtained through item synthesis.", url: "https://www.khguides.com/kh/inventory/weapons/#ultima-weapon" },
+    { itemId: 101, name: "Diamond Dust",      hint: "Defeat the Ice Titan in the Gold Match at Olympus Coliseum.", url: "https://www.khguides.com/kh/inventory/weapons/#diamond-dust" },
+    { itemId: 102, name: "One-Winged Angel",  hint: "Defeat Sephiroth in the Platinum Match at Olympus Coliseum.", url: "https://www.khguides.com/kh/inventory/weapons/#one-winged-angel" }
   ],
 
   /*
@@ -126,20 +123,20 @@ const KH1_CONTENT = Object.freeze({
    */
   STAVES: [
     { itemId: 103, name: "Mage's Staff",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#mages-staff" },
-    { itemId: 104, name: "Morning Star",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#morning-star" },
-    { itemId: 105, name: "Shooting Star",      hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#shooting-star" },
-    { itemId: 106, name: "Magus Staff",        hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#magus-staff" },
-    { itemId: 107, name: "Wisdom Staff",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#wisdom-staff" },
-    { itemId: 108, name: "Warhammer",          hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#warhammer" },
-    { itemId: 109, name: "Silver Mallet",      hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#silver-mallet" },
-    { itemId: 110, name: "Grand Mallet",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#grand-mallet" },
-    { itemId: 111, name: "Lord Fortune",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#lord-fortune" },
-    { itemId: 112, name: "Violetta",           hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#violetta" },
-    { itemId: 113, name: "Dream Rod",          hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#dream-rod" },
-    { itemId: 114, name: "Save the Queen",     hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#save-the-queen" },
-    { itemId: 115, name: "Wizard's Relic",     hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#wizards-relic" },
-    { itemId: 116, name: "Meteor Strike",      hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#meteor-strike" },
-    { itemId: 117, name: "Fantasista",         hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#fantasista" }
+    { itemId: 104, name: "Morning Star",       hint: "Purchase from Item Shop in Traverse Town (300 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#morning-star" },
+    { itemId: 105, name: "Shooting Star",      hint: "Purchase from Item Shop in Traverse Town (800 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#shooting-star" },
+    { itemId: 106, name: "Magus Staff",        hint: "Purchase from Item Shop in Traverse Town (1200 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#magus-staff" },
+    { itemId: 107, name: "Wisdom Staff",       hint: "Purchase from Item Shop in Traverse Town (4000 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#wisdom-staff" },
+    { itemId: 108, name: "Warhammer",          hint: "Purchase from Item Shop in Traverse Town (450 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#warhammer" },
+    { itemId: 109, name: "Silver Mallet",      hint: "Purchase from Item Shop in Traverse Town (1200 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#silver-mallet" },
+    { itemId: 110, name: "Grand Mallet",       hint: "Purchase from Item Shop in Traverse Town (4000 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#grand-mallet" },
+    { itemId: 111, name: "Lord Fortune",       hint: "Received from the Fairy Godmother in Traverse Town after acquiring all summons.", url: "https://www.khguides.com/kh/inventory/weapons/#lord-fortune" },
+    { itemId: 112, name: "Violetta",           hint: "Unseal the White Trinity in Olympus Coliseum.", url: "https://www.khguides.com/kh/inventory/weapons/#violetta" },
+    { itemId: 113, name: "Dream Rod",          hint: "Received from Merlin in Traverse Town after acquiring all third-tier magic spells.", url: "https://www.khguides.com/kh/inventory/weapons/#dream-rod" },
+    { itemId: 114, name: "Save the Queen",     hint: "Win the Hades Cup alone (only Sora).", url: "https://www.khguides.com/kh/inventory/weapons/#save-the-queen" },
+    { itemId: 115, name: "Wizard's Relic",     hint: "Dropped by Wizard Heartless (0.2%).", url: "https://www.khguides.com/kh/inventory/weapons/#wizards-relic" },
+    { itemId: 116, name: "Meteor Strike",      hint: "Obtained from a chest in the Giant Crevasse of End of the World.", url: "https://www.khguides.com/kh/inventory/weapons/#meteor-strike" },
+    { itemId: 117, name: "Fantasista",         hint: "Obtained through item synthesis.", url: "https://www.khguides.com/kh/inventory/weapons/#fantasista" }
   ],
 
   /*
@@ -147,20 +144,20 @@ const KH1_CONTENT = Object.freeze({
    */
   SHIELDS: [
     { itemId: 119, name: "Knight's Shield",    hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#knights-shield" },
-    { itemId: 120, name: "Mythril Shield",     hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#mythril-shield" },
-    { itemId: 121, name: "Onyx Shield",        hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#onyx-shield" },
-    { itemId: 122, name: "Stout Shield",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#stout-shield" },
-    { itemId: 123, name: "Golem Shield",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#golem-shield" },
-    { itemId: 124, name: "Adamant Shield",     hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#adamant-shield" },
-    { itemId: 125, name: "Smasher",            hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#smasher" },
-    { itemId: 126, name: "Gigas Fist",         hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#gigas-fist" },
-    { itemId: 127, name: "Genji Shield",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#genji-shield" },
-    { itemId: 128, name: "Herc's Shield",      hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#hercs-shield" },
-    { itemId: 129, name: "Dream Shield",       hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#dream-shield" },
-    { itemId: 130, name: "Save the King",      hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#save-the-king" },
-    { itemId: 131, name: "Defender",           hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#defender" },
-    { itemId: 132, name: "Mighty Shield",      hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#mighty-shield" },
-    { itemId: 133, name: "Seven Elements",     hint: "", url: "https://www.khguides.com/kh/inventory/weapons/#seven-elements" }
+    { itemId: 120, name: "Mythril Shield",     hint: "Purchase from Item Shop in Traverse Town (800 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#mythril-shield" },
+    { itemId: 121, name: "Onyx Shield",        hint: "Purchase from Item Shop in Traverse Town (2800 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#onyx-shield" },
+    { itemId: 122, name: "Stout Shield",       hint: "Purchase from Item Shop in Traverse Town (450 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#stout-shield" },
+    { itemId: 123, name: "Golem Shield",       hint: "Purchase from Item Shop in Traverse Town (1200 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#golem-shield" },
+    { itemId: 124, name: "Adamant Shield",     hint: "Purchase from Item Shop in Traverse Town (4000 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#adamant-shield" },
+    { itemId: 125, name: "Smasher",            hint: "Purchase from Item Shop in Traverse Town (450 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#smasher" },
+    { itemId: 126, name: "Gigas Fist",         hint: "Purchase from Item Shop in Traverse Town (1200 munny).", url: "https://www.khguides.com/kh/inventory/weapons/#gigas-fist" },
+    { itemId: 127, name: "Genji Shield",       hint: "Defeat Yuffie in the Hades Cup.", url: "https://www.khguides.com/kh/inventory/weapons/#genji-shield" },
+    { itemId: 128, name: "Herc's Shield",      hint: "Defeat Hercules in the Hercules Cup.", url: "https://www.khguides.com/kh/inventory/weapons/#hercs-shield" },
+    { itemId: 129, name: "Dream Shield",       hint: "Receive from Merlin in Traverse Town after acquiring all seven Magic Arts from White Mushroom Heartless.", url: "https://www.khguides.com/kh/inventory/weapons/#dream-shield" },
+    { itemId: 130, name: "Save the King",      hint: "Win the Hades Cup in time trial mode.", url: "https://www.khguides.com/kh/inventory/weapons/#save-the-king" },
+    { itemId: 131, name: "Defender",           hint: "Dropped by Defender Heartless (0.2%).", url: "https://www.khguides.com/kh/inventory/weapons/#defender" },
+    { itemId: 132, name: "Mighty Shield",      hint: "Obtained from a chest in the World Terminus of End of the World.", url: "https://www.khguides.com/kh/inventory/weapons/#mighty-shield" },
+    { itemId: 133, name: "Seven Elements",     hint: "Obtained through item synthesis.", url: "https://www.khguides.com/kh/inventory/weapons/#seven-elements" }
   ],
 
   /*
@@ -186,61 +183,61 @@ const KH1_CONTENT = Object.freeze({
     {
       name: "Fire",
       tiers: ["Not Obtained", "Fire", "Fira", "Firaga"],
-      upgradeHints: ["", "", ""],
-      hint: "",
+      upgradeHints: ["Defeat Jafar Genie in Agrabah.", "Defeat Behemoth in Hollow Bastion.", "You already reached max"],
+      hint: "Defeat Guard Armor in Traverse Town.",
       url: "https://www.khguides.com/kh/combat/magic/#fire"
     },
     {
       name: "Blizzard",
       tiers: ["Not Obtained", "Blizzard", "Blizzara", "Blizzaga"],
-      upgradeHints: ["", "", ""],
-      hint: "",
+      upgradeHints: ["Defeat Jafar in Agrabah.", "Defeat the Destroyed Behemoth in the Hades Cup at Olympus Coliseum.", "You already reached max"],
+      hint: "Find the Claw Marks evidence or defeat Trickmaster in Wonderland.",
       url: "https://www.khguides.com/kh/combat/magic/#blizzard"
     },
     {
       name: "Thunder",
       tiers: ["Not Obtained", "Thunder", "Thundara", "Thundaga"],
-      upgradeHints: ["", "", ""],
-      hint: "",
+      upgradeHints: ["Defeat Ursula II in Atlantica.", "Defeat Cerberus in the Hades Cup at Olympus Coliseum.", "You already reached max"],
+      hint: "Complete Phil's training in Olympus Coliseum.",
       url: "https://www.khguides.com/kh/combat/magic/#thunder"
     },
     {
       name: "Cure",
       tiers: ["Not Obtained", "Cure", "Cura", "Curaga"],
-      upgradeHints: ["", "", ""],
-      hint: "",
+      upgradeHints: ["Encounter Captain Hook on the deck in Neverland.", "Speak to Aerith three times in the library of Hollow Bastion (after second story episode).", "You already reached max"],
+      hint: "Defeat Clayton + Stealth Sneak in Deep Jungle.",
       url: "https://www.khguides.com/kh/combat/magic/#cure"
     },
     {
       name: "Gravity",
       tiers: ["Not Obtained", "Gravity", "Gravira", "Graviga"],
-      upgradeHints: ["", "", ""],
-      hint: "",
+      upgradeHints: ["Defeat Oogie's Manor in Halloween Town.", "Defeat Hades in the Hades Cup at Olympus Coliseum.", "You already reached max"],
+      hint: "Complete the Phil Cup (together) in Olympus Coliseum.",
       url: "https://www.khguides.com/kh/combat/magic/#gravity"
     },
     {
       name: "Stop",
       tiers: ["Not Obtained", "Stop", "Stopra", "Stopga"],
-      upgradeHints: ["", "", ""],
-      hint: "",
+      upgradeHints: ["Complete the Pooh's Swing mini-game from the third Torn Page in Hundred Acre Wood.", "Defeat Phantom in Neverland.", "You already reached max"],
+      hint: "Defeat Parasite Cage II in Monstro.",
       url: "https://www.khguides.com/kh/combat/magic/#stop"
     },
     {
       name: "Aero",
       tiers: ["Not Obtained", "Aero", "Aerora", "Aeroga"],
-      upgradeHints: ["", "", ""],
-      hint: "",
+      upgradeHints: ["Open a chest within the ship's Hold, accessible by unsealing the Yellow Trinity in Neverland.", "Return all 99 puppies to Pongo & Perdita in Traverse Town.", "You already reached max"],
+      hint: "Defeat Opposite Armor in Traverse Town.",
       url: "https://www.khguides.com/kh/combat/magic/#aero"
     }
   ],
 
   SUMMONS: [
-    { name: "Simba",        hint: "", url: "https://www.khguides.com/kh/combat/summons/#simba" },
-    { name: "Genie",        hint: "", url: "https://www.khguides.com/kh/combat/summons/#genie" },
-    { name: "Dumbo",        hint: "", url: "https://www.khguides.com/kh/combat/summons/#dumbo" },
-    { name: "Tinker Bell",  hint: "", url: "https://www.khguides.com/kh/combat/summons/#tinker-bell" },
-    { name: "Bambi",        hint: "", url: "https://www.khguides.com/kh/combat/summons/#bambi" },
-    { name: "Mushu",        hint: "", url: "https://www.khguides.com/kh/combat/summons/#mushu" }
+    { name: "Simba",        hint: "Earthshine gem - from Leon during Sora's second visit to Traverse Town.", url: "https://www.khguides.com/kh/combat/summons/#simba" },
+    { name: "Genie",        hint: "Defeat Jafar Genie.", url: "https://www.khguides.com/kh/combat/summons/#genie" },
+    { name: "Dumbo",        hint: "Naturespark gem - complete after the mini-game in the first Torn Page of the Hundred Acre Wood.", url: "https://www.khguides.com/kh/combat/summons/#dumbo" },
+    { name: "Tinker Bell",  hint: "Seal the Keyhole in Neverland.", url: "https://www.khguides.com/kh/combat/summons/#tinker-bell" },
+    { name: "Bambi",        hint: "Watergleam - chest inside the Mouth area of Monstro (High Jump Required).", url: "https://www.khguides.com/kh/combat/summons/#bambi" },
+    { name: "Mushu",        hint: "Fireglow gem - Defeat Maleficent Dragon in Hollow Bastion. ", url: "https://www.khguides.com/kh/combat/summons/#mushu" }
   ],
 
 
@@ -278,11 +275,10 @@ const KH1_CONTENT = Object.freeze({
   /*
    * TRINITY MARKS
    * -------------
-   * 38 of the 46 physical locations now have confirmed persistent bits from
-   * controlled Slot 99 testing. The remaining eight are action-dependent:
-   * tests 3, 4, 18, 19, 20, 24, 32 and 34.
+   * All 46 physical locations have confirmed independent completion flags
+   * from controlled save comparisons.
    *
-   * For confirmed rows the interface uses the exact per-location flag.
+   * The interface uses the exact per-location flag for every row.
    * Pending rows are not assigned guessed bits and remain Unknown. The color
    * counters are deliberately NOT used to infer any physical Trinity row.
    */
@@ -290,72 +286,72 @@ const KH1_CONTENT = Object.freeze({
     {
       color: "Blue",
       marks: [
-        { testNumber: 1, number: 1, name: "Traverse Town — First District", hint: "Near the world exit, across from the Accessory Shop", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 2, number: 2, name: "Traverse Town — First District", hint: "In front of the café near the Item Shop", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 3, number: 3, name: "Traverse Town — Third District", hint: "Behind the Lady & the Tramp fountain", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 4, number: 4, name: "Traverse Town — Magician's Study", hint: "Near the save station", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 5, number: 5, name: "Wonderland — Lotus Forest", hint: "Yellow-flowers alcove", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 6, number: 6, name: "Wonderland — Lotus Forest", hint: "Yellow-mushrooms alcove", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 7, number: 7, name: "Olympus Coliseum — Gates", hint: "Left gladiator statue", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 8, number: 8, name: "Olympus Coliseum — Gates", hint: "Right gladiator statue", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 9, number: 9, name: "Deep Jungle — Camp", hint: "Near lab equipment / Hippo Lagoon passage", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 10, number: 10, name: "Deep Jungle — Climbing Trees", hint: "Raised platform near Tree House passage", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 11, number: 11, name: "Agrabah — Bazaar", hint: "Ground level, center of area", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 12, number: 12, name: "Agrabah — Cave of Wonders: Silent Chamber", hint: "Center platform near Hall passage", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 13, number: 13, name: "Monstro — Mouth", hint: "Wooden platform near front of mouth", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 14, number: 14, name: "Monstro — Chamber 5", hint: "Ground level across from Chamber 6 passage", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 15, number: 15, name: "Monstro — Throat", hint: "Lowest level, center", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 16, number: 16, name: "Hollow Bastion — Waterway: Dungeon", hint: "Near center, left of Lift Stop platform", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 17, number: 17, name: "Hollow Bastion — Great Crest", hint: "Center after riding floating platform", url: KH1_GUIDE_URLS.TRINITIES }
+        { index: 1, number: 1, name: "Traverse Town — First District", hint: "Near the world exit, across from the Accessory Shop", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 2, number: 2, name: "Traverse Town — First District", hint: "In front of the café near the Item Shop", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 3, number: 3, name: "Traverse Town — Third District", hint: "Behind the Lady & the Tramp fountain", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 4, number: 4, name: "Traverse Town — Magician's Study", hint: "Near the save station", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 5, number: 5, name: "Wonderland — Lotus Forest", hint: "Yellow-flowers alcove", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 6, number: 6, name: "Wonderland — Lotus Forest", hint: "Yellow-mushrooms alcove", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 7, number: 7, name: "Olympus Coliseum — Gates", hint: "Left gladiator statue", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 8, number: 8, name: "Olympus Coliseum — Gates", hint: "Right gladiator statue", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 9, number: 9, name: "Deep Jungle — Camp", hint: "Near lab equipment / Hippo Lagoon passage", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 10, number: 10, name: "Deep Jungle — Climbing Trees", hint: "Raised platform near Tree House passage", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 11, number: 11, name: "Agrabah — Bazaar", hint: "Ground level, center of area", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 12, number: 12, name: "Agrabah — Cave of Wonders: Silent Chamber", hint: "Center platform near Hall passage", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 13, number: 13, name: "Monstro — Mouth", hint: "Wooden platform near front of mouth", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 14, number: 14, name: "Monstro — Chamber 5", hint: "Ground level across from Chamber 6 passage", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 15, number: 15, name: "Monstro — Throat", hint: "Lowest level, center", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 16, number: 16, name: "Hollow Bastion — Waterway: Dungeon", hint: "Near center, left of Lift Stop platform", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" },
+        { index: 17, number: 17, name: "Hollow Bastion — Great Crest", hint: "Center after riding floating platform", url: "https://www.khguides.com/kh/collectibles/trinities/#blue" }
       ]
     },
     {
       color: "Red",
       marks: [
-        { testNumber: 18, number: 1, name: "Traverse Town — First District", hint: "Wooden fence in alley behind Item Shop", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 19, number: 2, name: "Traverse Town — Alleyway", hint: "Metal grate blocking the Waterway", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 20, number: 3, name: "Traverse Town — Second District", hint: "Wooden planks in front of bell tower", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 21, number: 4, name: "Agrabah — Treasure Room", hint: "In front of sphinx statue", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 22, number: 5, name: "Halloween Town — Oogie's Manor", hint: "Ground-level archway near the stream", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 23, number: 6, name: "Hollow Bastion — Entrance Hall", hint: "Second-floor balcony near horned statue", url: KH1_GUIDE_URLS.TRINITIES }
+        { index: 18, number: 1, name: "Traverse Town — First District", hint: "Wooden fence in alley behind Item Shop", url: "https://www.khguides.com/kh/collectibles/trinities/#red" },
+        { index: 19, number: 2, name: "Traverse Town — Alleyway", hint: "Metal grate blocking the Waterway", url: "https://www.khguides.com/kh/collectibles/trinities/#red" },
+        { index: 20, number: 3, name: "Traverse Town — Second District", hint: "Wooden planks in front of bell tower", url: "https://www.khguides.com/kh/collectibles/trinities/#red" },
+        { index: 21, number: 4, name: "Agrabah — Treasure Room", hint: "In front of sphinx statue", url: "https://www.khguides.com/kh/collectibles/trinities/#red" },
+        { index: 22, number: 5, name: "Halloween Town — Oogie's Manor", hint: "Ground-level archway near the stream", url: "https://www.khguides.com/kh/collectibles/trinities/#red" },
+        { index: 23, number: 6, name: "Hollow Bastion — Entrance Hall", hint: "Second-floor balcony near horned statue", url: "https://www.khguides.com/kh/collectibles/trinities/#red" }
       ]
     },
     {
       color: "Green",
       marks: [
-        { testNumber: 24, number: 1, name: "Traverse Town — First District: Accessory Shop", hint: "In front of the center table", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 25, number: 2, name: "Wonderland — Bizarre Room", hint: "At ground level inside the furnace", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 26, number: 3, name: "Wonderland — Rabbit Hole", hint: "Along the wall near the save station", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 27, number: 4, name: "Olympus Coliseum — Gates", hint: "Between two braziers near world-map passage", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 28, number: 5, name: "Deep Jungle — Treetops", hint: "Center of the area", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 29, number: 6, name: "Agrabah — Storage Room", hint: "Near shelving across from save station", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 30, number: 7, name: "Monstro — Mouth", hint: "Top of Geppetto's ship", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 31, number: 8, name: "Neverland — Cabin", hint: "Center of room", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 32, number: 9, name: "Hollow Bastion — Library", hint: "Second floor near bookcase/table/balcony", url: KH1_GUIDE_URLS.TRINITIES }
+        { index: 24, number: 1, name: "Traverse Town — First District: Accessory Shop", hint: "In front of the center table", url: "https://www.khguides.com/kh/collectibles/trinities/#green" },
+        { index: 25, number: 2, name: "Wonderland — Bizarre Room", hint: "At ground level inside the furnace", url: "https://www.khguides.com/kh/collectibles/trinities/#green" },
+        { index: 26, number: 3, name: "Wonderland — Rabbit Hole", hint: "Along the wall near the save station", url: "https://www.khguides.com/kh/collectibles/trinities/#green" },
+        { index: 27, number: 4, name: "Olympus Coliseum — Gates", hint: "Between two braziers near world-map passage", url: "https://www.khguides.com/kh/collectibles/trinities/#green" },
+        { index: 28, number: 5, name: "Deep Jungle — Treetops", hint: "Center of the area", url: "https://www.khguides.com/kh/collectibles/trinities/#green" },
+        { index: 29, number: 6, name: "Agrabah — Storage Room", hint: "Near shelving across from save station", url: "https://www.khguides.com/kh/collectibles/trinities/#green" },
+        { index: 30, number: 7, name: "Monstro — Mouth", hint: "Top of Geppetto's ship", url: "https://www.khguides.com/kh/collectibles/trinities/#green" },
+        { index: 31, number: 8, name: "Neverland — Cabin", hint: "Center of room", url: "https://www.khguides.com/kh/collectibles/trinities/#green" },
+        { index: 32, number: 9, name: "Hollow Bastion — Library", hint: "Second floor near bookcase/table/balcony", url: "https://www.khguides.com/kh/collectibles/trinities/#green" }
       ]
     },
     {
       color: "Yellow",
       marks: [
-        { testNumber: 33, number: 1, name: "Traverse Town — Mystical House", hint: "Behind Merlin's house near large crates", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 34, number: 2, name: "Olympus Coliseum — Lobby", hint: "In front of the large pedestal", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 35, number: 3, name: "Agrabah — Cave of Wonders: Hall", hint: "Stone statue near boulder path", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 36, number: 4, name: "Neverland — Hold", hint: "Locked door after climbing ladder", url: KH1_GUIDE_URLS.TRINITIES }
+        { index: 33, number: 1, name: "Traverse Town — Mystical House", hint: "Behind Merlin's house near large crates", url: "https://www.khguides.com/kh/collectibles/trinities/#yellow" },
+        { index: 34, number: 2, name: "Olympus Coliseum — Lobby", hint: "In front of the large pedestal", url: "https://www.khguides.com/kh/collectibles/trinities/#yellow" },
+        { index: 35, number: 3, name: "Agrabah — Cave of Wonders: Hall", hint: "Stone statue near boulder path", url: "https://www.khguides.com/kh/collectibles/trinities/#yellow" },
+        { index: 36, number: 4, name: "Neverland — Hold", hint: "Locked door after climbing ladder", url: "https://www.khguides.com/kh/collectibles/trinities/#yellow" }
       ]
     },
     {
       color: "White",
       marks: [
-        { testNumber: 37, number: 1, name: "Traverse Town — Waterway", hint: "Across from the mural", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 38, number: 2, name: "Wonderland — Lotus Forest", hint: "Alcove through painting in sideways Bizarre Room", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 39, number: 3, name: "Olympus Coliseum — Gates", hint: "Center of the area", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 40, number: 4, name: "Deep Jungle — Cavern of Hearts", hint: "Center of the area", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 41, number: 5, name: "Agrabah — Cave of Wonders: Entrance", hint: "Left of entrance when facing Hall", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 42, number: 6, name: "Monstro — Chamber 6", hint: "Ground level, center", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 43, number: 7, name: "Atlantica — Triton's Palace", hint: "Inside large purple shell structure", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 44, number: 8, name: "Halloween Town — Moonlight Hill", hint: "In front of hill near pumpkin patch", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 45, number: 9, name: "Neverland — Ship", hint: "Near ship's wheel above deck", url: KH1_GUIDE_URLS.TRINITIES },
-        { testNumber: 46, number: 10, name: "Hollow Bastion — Rising Falls", hint: "Shallow pool about halfway up falls", url: KH1_GUIDE_URLS.TRINITIES }
+        { index: 37, number: 1, name: "Traverse Town — Waterway", hint: "Across from the mural", url: "https://www.khguides.com/kh/collectibles/trinities/#white" },
+        { index: 38, number: 2, name: "Wonderland — Lotus Forest", hint: "Alcove through painting in sideways Bizarre Room", url: "https://www.khguides.com/kh/collectibles/trinities/#white" },
+        { index: 39, number: 3, name: "Olympus Coliseum — Gates", hint: "Center of the area", url: "https://www.khguides.com/kh/collectibles/trinities/#white" },
+        { index: 40, number: 4, name: "Deep Jungle — Cavern of Hearts", hint: "Center of the area", url: "https://www.khguides.com/kh/collectibles/trinities/#white" },
+        { index: 41, number: 5, name: "Agrabah — Cave of Wonders: Entrance", hint: "Left of entrance when facing Hall", url: "https://www.khguides.com/kh/collectibles/trinities/#white" },
+        { index: 42, number: 6, name: "Monstro — Chamber 6", hint: "Ground level, center", url: "https://www.khguides.com/kh/collectibles/trinities/#white" },
+        { index: 43, number: 7, name: "Atlantica — Triton's Palace", hint: "Inside large purple shell structure", url: "https://www.khguides.com/kh/collectibles/trinities/#white" },
+        { index: 44, number: 8, name: "Halloween Town — Moonlight Hill", hint: "In front of hill near pumpkin patch", url: "https://www.khguides.com/kh/collectibles/trinities/#white" },
+        { index: 45, number: 9, name: "Neverland — Ship", hint: "Near ship's wheel above deck", url: "https://www.khguides.com/kh/collectibles/trinities/#white" },
+        { index: 46, number: 10, name: "Hollow Bastion — Rising Falls", hint: "Shallow pool about halfway up falls", url: "https://www.khguides.com/kh/collectibles/trinities/#white" }
       ]
     }
   ],
@@ -500,6 +496,13 @@ const KH1_CONTENT = Object.freeze({
    * belong here; they are resolved from kh1-dictionary.js.
    */
   JOURNAL_CHARACTER_OVERRIDES: {},
+
+  /*
+   * Optional metadata for the Extra -> Character Levels & Details rows.
+   * Keys are the displayed character names, for example:
+   *   "Sora": { hint: "", url: "https://..." }
+   */
+  CHARACTER_DETAIL_OVERRIDES: {},
 
   /*
    * Journal UI grouping/order only.
@@ -776,8 +779,33 @@ const KH1_CONTENT = Object.freeze({
    * Binary completion/score mappings live in KH1_MINIGAME_STATES.
    */
   MINIGAMES: [
-    { key: "jungleSlider", world: "Deep Jungle", name: "Jungle Slider", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#jungle-slider" },
-    { key: "vineJump", world: "Deep Jungle", name: "Vine Jump", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#vine-jump" },
+    {
+      key: "jungleSlider",
+      world: "Deep Jungle",
+      name: "Jungle Slider",
+      hint: "",
+      url: "https://www.khguides.com/kh/deep-jungle/#jungle-slider",
+      subrecords: [
+        { name: "Green Serpent", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#jungle-slider" },
+        { name: "Splash Tunnel", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#jungle-slider" },
+        { name: "Jade Spiral", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#jungle-slider" },
+        { name: "Panic Fall", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#jungle-slider" },
+        { name: "Shadow Cavern", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#jungle-slider" }
+      ]
+    },
+    {
+      key: "vineJump",
+      world: "Deep Jungle",
+      name: "Vine Jump",
+      hint: "",
+      url: "https://www.khguides.com/kh/deep-jungle/#vine-jump",
+      subrecords: [
+        { name: "Jump Course", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#vine-jump" },
+        { name: "Trap Course", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#vine-jump" },
+        { name: "Acrobatic Course", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#vine-jump" },
+        { name: "Expert Course", hint: "", url: "https://www.khguides.com/kh/deep-jungle/#vine-jump" }
+      ]
+    },
 
     { key: "poohHunnyHunt", world: "100 Acre Wood", name: "Pooh's Hunny Hunt", hint: "", url: "https://www.khguides.com/kh/hundred-acre-wood/#page1" },
     { key: "blockTigger", world: "100 Acre Wood", name: "Block Tigger", hint: "", url: "https://www.khguides.com/kh/hundred-acre-wood/#page2" },
@@ -791,7 +819,13 @@ const KH1_CONTENT = Object.freeze({
       name: "Olympus Coliseum",
       hint: "",
       url: "https://www.khguides.com/kh/olympus-coliseum/",
-      trackingNote: "The Journal entry contains four confirmed time-trial record fields for the Phil, Pegasus, Hercules, and Hades Cups."
+      trackingNote: "The Journal entry contains four confirmed time-trial record fields for the Phil, Pegasus, Hercules, and Hades Cups.",
+      subrecords: [
+        { name: "Phil Cup", hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#phil-cup" },
+        { name: "Pegasus Cup", hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#pegasus-cup" },
+        { name: "Hercules Cup", hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#hercules-cup" },
+        { name: "Hades Cup", hint: "", url: "https://www.khguides.com/kh/olympus-coliseum/#hades-cup" }
+      ]
     }
   ],
 
@@ -809,6 +843,69 @@ const KH1_CONTENT = Object.freeze({
 
 
   /*
+   * Ansem Reports.
+   *
+   * Edit hint/url directly on any report row. The renderer does not hardcode
+   * report links anymore.
+   */
+  ANSEM_REPORTS: [
+    { number: 1, name: "Ansem's Report 1", hint: "Defeat Jafar Genie in Agrabah", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" },
+    { number: 2, name: "Ansem's Report 2", hint: "Speak to Aerith in the Library after the sealing the Keyhole in Hollow Bastion", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" },
+    { number: 3, name: "Ansem's Report 3", hint: "Defeat Ursula II in Atlantica", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" },
+    { number: 4, name: "Ansem's Report 4", hint: "Speak to Aerith in the Library after the sealing the Keyhole in Hollow Bastion", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" },
+    { number: 5, name: "Ansem's Report 5", hint: "Defeat Maleficent in Hollow Bastion", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" },
+    { number: 6, name: "Ansem's Report 6", hint: "Speak to Aerith in the Library after the sealing the Keyhole in Hollow Bastion", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" },
+    { number: 7, name: "Ansem's Report 7", hint: "Defeat Oogie Boogie in Halloween Town", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" },
+    { number: 8, name: "Ansem's Report 8", hint: "Defeat Hades in the Hades Cup at Olympus Coliseum", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" },
+    { number: 9, name: "Ansem's Report 9", hint: "Defeat Captain Hook in Neverland", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" },
+    { number: 10, name: "Ansem's Report 10", hint: "Speak to Aerith in the Library after the sealing the Keyhole in Hollow Bastion", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" },
+    { number: 11, name: "Ansem's Report 11", hint: "Defeat Kurt Zisa in Agrabah", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" },
+    { number: 12, name: "Ansem's Report 12", hint: "Defeat Sephiroth in Olympus Coliseum", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" },
+    { number: 13, name: "Ansem's Report 13", hint: "Defeat Unknown in Hollow Bastion", url: "https://www.khguides.com/kh/collectibles/ansem-reports/" }
+  ],
+
+  /*
+   * Dalmatian puppy triplets.
+   *
+   * Each visible 3-puppy row has its own editable hint/url metadata here.
+   */
+  PUPPY_GROUPS: [
+    { start: 1, end: 3, name: "Puppies 1-3 (Traverse Town: Mystical House)", hint: "On a stone near the wall behind Merlin's house; requires Glide.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 4, end: 6, name: "Puppies 4-6 (Traverse Town: Alleyway)", hint: "Behind a wall of crates; activate Red Trinity in first district.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 7, end: 9, name: "Puppies 7-9 (Traverse Town: Item Workshop)", hint: "On a table near one of the Moogles.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 10, end: 12, name: "Puppies 10-12 (Traverse Town: Waterway)", hint: "Just inside the stairwell leading to Merlin's Study.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 13, end: 15, name: "Puppies 13-15 (Wonderland: Queen's Castle)", hint: "On a ledge across from the save station, accessible from Lotus Forest.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 16, end: 18, name: "Puppies 16-18 (Wonderland: Lotus Forest)", hint: "On a lillypad near the center of the area; jump on the nearby mushrooms to reach it.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 19, end: 21, name: "Puppies 19-21 (Wonderland: Tea Party Garden)", hint: "On a hedge along the wall across from the cottage; accessible from Lotus Forest passage requiring shared ability Glide.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 22, end: 24, name: "Puppies 22-24 (Olympus Coliseum: Gates)", hint: "Unseal the Blue Trinity in front of the statue on the right.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 25, end: 27, name: "Puppies 25-27 (Deep Jungle: Hippos' Lagoon)", hint: "On the far side of the lagoon, accessible by jumping on the hippos.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 28, end: 30, name: "Puppies 28-30 (Deep Jungle: Vines 2)", hint: "On a ledge in the center of the area; accessible using the vines on the right.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 31, end: 33, name: "Puppies 31-33 (Deep Jungle: Waterfall Cavern)", hint: "On a ledge halfway up the falls; just under a wall covered in vines.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 34, end: 36, name: "Puppies 34-36 (Deep Jungle: Camp)", hint: "Unseal the Blue Trinity near the lab table.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 37, end: 39, name: "Puppies 37-39 (Agrabah: Cave of Wonders: Treasure Room)", hint: "On a ledge near the entrance to Bottomless Hall, accessible by jumping from a pile of treasure.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 40, end: 42, name: "Puppies 40-42 (Halloween Town: Oogie's Manor)", hint: "In an alcove halfway up the manor; must activate the switch in the Evil Playroom first.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 43, end: 45, name: "Puppies 43-45 (Neverland: Pirate Ship)", hint: "Unseal the White Trinity near the ship's wheel.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 46, end: 48, name: "Puppies 46-48 (Agrabah: Cave of Wonders: Hidden Room)", hint: "Activate the statue to open the nearby wall; requires Yellow Trinity or High Jump.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 49, end: 51, name: "Puppies 49-51 (Agrabah: Cave of Wonders: Entrance)", hint: "On top of a pillar near the entrance to the Hall, accessible using High Jump, Glide, or a well-positioned jump from a barrel.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 52, end: 54, name: "Puppies 52-54 (Agrabah: Palace Gates)", hint: "On the highest ledge in the corner across from the palace gates; requires shared ability High Jump.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 55, end: 57, name: "Puppies 55-57 (Monstro: Chamber 3)", hint: "On a bluish-green platform, just above the entrance to Chamber 2.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 58, end: 60, name: "Puppies 58-60 (Wonderland: Lotus Forest)", hint: "Cast Thunder on the pink flowers in the alcove accessible through the painting in sideways Bizarre Room.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 61, end: 63, name: "Puppies 61-63 (Hollow Bastion: Grand Hall)", hint: "On ledge to the left of the portal leading to the Dark Depths.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 64, end: 66, name: "Puppies 64-66 (Halloween Town: Cemetery)", hint: "In the far corner, near a tombstone with 'RIP' on it.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 67, end: 69, name: "Puppies 67-69 (Halloween Town: Moonlight Hill)", hint: "Unseal the White Trinity in front of the hill.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 70, end: 72, name: "Puppies 70-72 (Halloween Town: Guillotine Square)", hint: "Inside the mouth of a pumpkin-like structure, accessible with Glide.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 73, end: 75, name: "Puppies 73-75 (Monstro: Mouth)", hint: "On a high platform along the wall, across from the shipwreck; accessible with High Jump.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 76, end: 78, name: "Puppies 76-78 (Monstro: Chamber 6)", hint: "At ground level, across from the passage to Chamber 5.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 79, end: 81, name: "Puppies 79-81 (Monstro: Chamber 5)", hint: "On a high ledge on top of a barrel, across from the passage to Chamber 4.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 82, end: 84, name: "Puppies 82-84 (Neverland: Hold)", hint: "On the upper rafters along the starboard side of the ship, requires Glide.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 85, end: 87, name: "Puppies 85-87 (Neverland: Hold)", hint: "Unseal the Yellow Trinity in the Hold, in the green chest on rolls of canvas.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 88, end: 90, name: "Puppies 88-90 (Neverland: Captain's Cabin)", hint: "Next to the bed, near the side window.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 91, end: 93, name: "Puppies 91-93 (Hollow Bastion: Rising Falls)", hint: "On a floating platform about a quarter of the way up the falls.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 94, end: 96, name: "Puppies 94-96 (Hollow Bastion: Castle Gates)", hint: "Cast Gravity on the small floating platform above; located in the far corner accessible using Glide.", url: "https://www.khguides.com/kh/collectibles/puppies/" },
+    { start: 97, end: 99, name: "Puppies 97-99 (Hollow Bastion: Lift Stop)", hint: "Cast Gravity on the small floating platform above; area accessible from passage in Library.", url: "https://www.khguides.com/kh/collectibles/puppies/" }
+  ],
+
+  /*
    * Gummi Ship Blueprint completion.
    * Names come from kh1-dictionary.js; this file only controls UI grouping.
    * The 48-entry PC order is accepted for the project after user spot-checks
@@ -816,24 +913,34 @@ const KH1_CONTENT = Object.freeze({
    */
   GUMMI_BLUEPRINT_URL: "https://www.khguides.com/kh/collectibles/gummis/",
 
+  /*
+   * Optional per-blueprint metadata keyed by the 0-based blueprint index.
+   * Example:
+   *   0: { hint: "Obtained from ...", url: "https://..." }
+   */
+  GUMMI_BLUEPRINT_OVERRIDES: {},
+
   GUMMI_BLUEPRINT_GROUPS: [
     {
       name: "Special Models",
+      hint: "",
       startIndex: 0,
       endIndex: 8,
-      url: "https://www.khguides.com/kh/collectibles/gummis/#special-models"
+      url: "https://www.khguides.com/kh/collectibles/gummis/#special"
     },
     {
       name: "Enemy Models",
+      hint: "",
       startIndex: 9,
       endIndex: 36,
-      url: "https://www.khguides.com/kh/collectibles/gummis/#enemy-models"
+      url: "https://www.khguides.com/kh/collectibles/gummis/#enemy"
     },
     {
       name: "Mission Models",
+      hint: "",
       startIndex: 37,
       endIndex: 47,
-      url: "https://www.khguides.com/kh/collectibles/gummis/#mission-models"
+      url: "https://www.khguides.com/kh/collectibles/gummis/#mission"
     }
   ],
 
@@ -957,6 +1064,6 @@ const KH1_CONTENT = Object.freeze({
       ]
     }
   ]
-});
+};
 
 export default KH1_CONTENT;
