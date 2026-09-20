@@ -1,6 +1,6 @@
 {
   "name": "kingdom-hearts-final-mix-completion-check",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "private": true,
   "description": "Kingdom Hearts Final Mix Steam save reader and completion analyzer",
   "main": "index.html",

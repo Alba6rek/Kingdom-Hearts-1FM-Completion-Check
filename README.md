@@ -31,7 +31,6 @@ This Read me still not finalized
 - Bosses are tracked.
 - Minigames tracked.
 
-
 ## V 0.4.0:
 - Dont ask for V 0.3.0
 - URL Updated.
@@ -40,6 +39,9 @@ This Read me still not finalized
 - removed unwanted data.
 - update the database/dictionary for the project (chests still not finished)
 - remove the unwanted description .
+
+## V 0.4.1:
+- Update the hint to make it visible all time when the thingy is completed/defeated/obtained/etc..
 
 ## in-progress:
 

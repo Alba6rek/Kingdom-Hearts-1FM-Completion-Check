@@ -1140,11 +1140,37 @@ input:checked + label .checkmark::after {
 }
 
 /*
- * Reveal the complete hint on mouse hover or keyboard focus.
+ * Completed/found/synthesized/etc. entries already have the parent
+ * `.single-entry.complete` state, so their hint is immediately readable.
+ * Missing/partial/unknown entries remain spoiler-safe and still require
+ * hover/focus.
  */
-.entry-hint:hover,
-.entry-hint:focus,
-.entry-hint:focus-within {
+.single-entry.complete .entry-hint {
+  /*
+   * Completed entries use the same visual treatment as a revealed/hovered
+   * hint, but remain permanently visible and do not animate.
+   */
+  background-color: transparent;
+  box-shadow: 0 0 0 1px rgba(236, 214, 148, 0.18);
+  cursor: default;
+  outline: none;
+  user-select: text;
+  transition: none;
+}
+
+.single-entry.complete .entry-hint .hint-text {
+  color: rgba(236, 214, 148, 0.96);
+  transition: none;
+}
+
+/*
+ * Completed entries are plain, permanently visible text and have no hover or
+ * focus animation. Only incomplete/partial/unknown entries use the reveal
+ * interaction below.
+ */
+.single-entry:not(.complete) .entry-hint:hover,
+.single-entry:not(.complete) .entry-hint:focus,
+.single-entry:not(.complete) .entry-hint:focus-within {
   background-color: transparent;
   box-shadow:
     0 0 0 1px rgba(236, 214, 148, 0.18);
@@ -1152,9 +1178,9 @@ input:checked + label .checkmark::after {
   user-select: text;
 }
 
-.entry-hint:hover .hint-text,
-.entry-hint:focus .hint-text,
-.entry-hint:focus-within .hint-text {
+.single-entry:not(.complete) .entry-hint:hover .hint-text,
+.single-entry:not(.complete) .entry-hint:focus .hint-text,
+.single-entry:not(.complete) .entry-hint:focus-within .hint-text {
   color: rgba(236, 214, 148, 0.96);
 }
 

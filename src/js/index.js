@@ -355,7 +355,7 @@ function BuildEntry({
               <span
                 class="entry-hint"
                 tabindex="0"
-                aria-label="Hint. Hover or focus to reveal the hint text."
+                aria-label="Hint. Incomplete entries reveal the hint on hover or focus."
               >
                 <strong class="hint-label">Hint:</strong>
                 <span class="hint-text">
