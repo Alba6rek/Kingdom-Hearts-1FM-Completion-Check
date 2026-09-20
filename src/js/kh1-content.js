@@ -687,6 +687,64 @@ const KH1_CONTENT = {
   ],
 
   /*
+   * Heartless Journal display metadata.
+   *
+   * Binary defeat counters and Journal ordering are decoded elsewhere.
+   * Keep user-facing hints and links here so every Heartless can be edited
+   * without touching the save parser.
+   *
+   * `index` matches the enemy counter index used by ENEMY_NAMES.
+   */
+  HEARTLESS: [
+    { index: 1, name: "Shadow", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#shadow" },
+    { index: 42, name: "Gigas Shadow", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#gigas-shadow" },
+    { index: 0, name: "Soldier", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#soldier" },
+    { index: 41, name: "Stealth Soldier", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#stealth-soldier" },
+    { index: 4, name: "Large Body", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#large-body" },
+    { index: 10, name: "Red Nocturne", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#red-nocturne" },
+    { index: 11, name: "Blue Rhapsody", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#blue-rhapsody" },
+    { index: 12, name: "Yellow Opera", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#yellow-opera" },
+    { index: 13, name: "Green Requiem", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#green-requiem" },
+    { index: 44, name: "Black Ballade", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#black-ballade" },
+    { index: 2, name: "Powerwild", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#powerwild" },
+    { index: 3, name: "Bouncywild", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#bouncywild" },
+    { index: 43, name: "Sniperwild", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#sniperwild" },
+    { index: 15, name: "Air Soldier", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#air-soldier" },
+    { index: 8, name: "Bandit", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#bandit" },
+    { index: 5, name: "Fat Bandit", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#fat-bandit" },
+    { index: 16, name: "Pot Spider", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#pot-spider" },
+    { index: 17, name: "Barrel Spider", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#barrel-spider" },
+    { index: 18, name: "Pot Scorpion", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#pot-scorpion" },
+    { index: 22, name: "Search Ghost", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#search-ghost" },
+    { index: 47, name: "Grand Ghost", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#grand-ghost" },
+    { index: 6, name: "Sea Neon", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#sea-neon" },
+    { index: 7, name: "Sheltering Zone", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#sheltering-zone" },
+    { index: 24, name: "Screwdiver", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#screwdiver" },
+    { index: 23, name: "Aquatank", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#aquatank" },
+    { index: 19, name: "Wight Knight", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#wight-knight" },
+    { index: 21, name: "Gargoyle", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#gargoyle" },
+    { index: 25, name: "Chimera", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#chimera" },
+    { index: 9, name: "Pirate", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#pirate" },
+    { index: 20, name: "Air Pirate", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#air-pirate" },
+    { index: 26, name: "Battleship", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#battleship" },
+    { index: 45, name: "Jet Balloon", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#jet-balloon" },
+    { index: 27, name: "Darkball", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#darkball" },
+    { index: 32, name: "Defender", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#defender" },
+    { index: 30, name: "Wyvern", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#wyvern" },
+    { index: 14, name: "Wizard", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#wizard" },
+    { index: 29, name: "Behemoth", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#behemoth" },
+    { index: 48, name: "Destroyed Behemoth", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#destroyed-behemoth" },
+    { index: 49, name: "Arch Behemoth", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#arch-behemoth" },
+    { index: 28, name: "Invisible", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#invisible" },
+    { index: 31, name: "Angel Star", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#angel-star" },
+    { index: 40, name: "Neoshadow", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#neoshadow" },
+    { index: 33, name: "White Mushroom", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#white-mushroom" },
+    { index: 34, name: "Black Fungus", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#black-fungus" },
+    { index: 35, name: "Rare Truffle", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#rare-truffle" },
+    { index: 39, name: "Pink Agaricus", hint: "", url: "https://www.khguides.com/kh/combat/enemies/#pink-agaricus" },
+  ],
+
+  /*
    * Boss display/grouping metadata.
    *
    * Binary completion rules live in KH1_BOSS_COMPLETION_STATES inside

@@ -45,6 +45,16 @@ import {
   DownloadJSON
 } from "./page-functions.js";
 
+const HEARTLESS_META_BY_INDEX =
+  new Map(
+    KH1_CONTENT.HEARTLESS.map(
+      entry => [
+        entry.index,
+        entry
+      ]
+    )
+  );
+
 const fileInput =
   document.getElementById(
     "save-area-file"
@@ -2140,6 +2150,11 @@ function RenderEnemyJournal(slot) {
                     const completed =
                       enemy.defeated > 0;
 
+                    const heartlessMeta =
+                      HEARTLESS_META_BY_INDEX.get(
+                        enemy.index
+                      ) ?? {};
+
                     const killLabel =
                       enemy.defeated === 1
                         ? "1 kill"
@@ -2149,6 +2164,7 @@ function RenderEnemyJournal(slot) {
 
                     return BuildEntry({
                       name:
+                        heartlessMeta.name ??
                         enemy.name,
 
                       value:
@@ -2166,6 +2182,14 @@ function RenderEnemyJournal(slot) {
 
                       spoiler:
                         !completed,
+
+                      hint:
+                        heartlessMeta.hint ??
+                        "",
+
+                      url:
+                        heartlessMeta.url ??
+                        "",
 
                       external:
                         true
